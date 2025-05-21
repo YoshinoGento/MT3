@@ -42,9 +42,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 v1{ 1.2f,-3.9f,2.5f };
 	Vector3 v2{ 2.8f,0.4f,-1.3f };
 	Vector3 cross = MatrixMath::Cross(v1, v2);
-	
 
-	Vector3 rotate{};
+
+	Vector3 rotate = { 0.0f,0.0f,0.0f };
 	Vector3 translate{};
 	Vector3 cameraPosition = { 0.0f,0.0f,-1.0f };
 	/*Player player ;*/
@@ -54,16 +54,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//三角形の３点
-	Vector3 kLocalVertices[3] = { (0.0f,0.0f,0.0f),(0.0f,0.0f,0.0f),(0.0f,0.0f,0.0f) };
-	//Vector3 kLocalVertices[3] = { (0.0f,1.0f,0.0f),(-1.0f,-0.5f,0.0f),(1.0f,-0.5f,0.0f) };
 
-	
+	Vector3 kLocalVertices[3] = {
+	{ 0.0f, 0.1f, 0.0f },
+	{ -0.1f, -0.1f, 0.0f },
+	{ 0.1f, -0.1f, 0.0f }
+	};
 
 
-	/*Player player[3];
-	for (int i = 0; i < 2; i++) {
-		player[i].speed_ = 10.0f;
-	}*/
+
+
+	Player player;
+
+	player.speed_ = 0.01f;
+
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -80,10 +84,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 
+		if (keys[DIK_W]) {
+			translate.z -= player.speed_;
+		}
+		if (keys[DIK_S]) {
+			translate.z += player.speed_;
+		}
+		if (keys[DIK_A]) {
+			translate.x -= player.speed_;
+		}
+		if (keys[DIK_D]) {
+			translate.x += player.speed_;
+		}
+
+
+		rotate.y -= 0.1f;
+
+		//Matrix4x4 rotateMatrix = MatrixMath::MakeRotateYMatrix(rotate.y);
+
+		//rotate = MatrixMath::MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
+
+
 		//各種行列の計算
 		Matrix4x4 worldMatrix = MatrixMath::MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
 
-		Matrix4x4 cameraMatrix = MatrixMath::MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, { 0.0f,0.0f,0.0f }, cameraPosition);
+		Matrix4x4 cameraMatrix = MatrixMath::MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, cameraPosition);
 
 		Matrix4x4 viewMatrix = MatrixMath::Inverse(cameraMatrix);
 
@@ -101,26 +126,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			screenVertices[i] = MatrixMath::Transform(ndcVertex, viewportMatrix);
 
-
-
-			/*if (keys[DIK_W]) {
-				screenVertices[i].y -= player[i].speed_;
-			}
-			if (keys[DIK_S]) {
-				screenVertices[i].y += player[i].speed_;
-			}
-			if (keys[DIK_A]) {
-				screenVertices[i].x -= player[i].speed_;
-			}
-			if (keys[DIK_D]) {
-				screenVertices[i].x += player[i].speed_;
-			}
-			if (keys[DIK_E]) {
-				screenVertices[i].z -= player[i].speed_;
-			}
-			if (keys[DIK_Q]) {
-				screenVertices[i].z += player[i].speed_;
-			}*/
 		}
 
 		///
@@ -139,7 +144,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		for (int i = 0; i < 3; ++i) {
 
-			Novice::ScreenPrintf(i , i*15, "screenVertices:x = %f,y = %f,z = %f", screenVertices[i].x, screenVertices[i].y,screenVertices[i].z);
+			Novice::ScreenPrintf(i, i * 15, "screenVertices:x = %f,y = %f,z = %f", screenVertices[i].x, screenVertices[i].y, screenVertices[i].z);
 		}
 		//VectorScreenPrintf(0, 0, cross, "Cross");
 		///
