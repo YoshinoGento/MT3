@@ -4,3 +4,7 @@ struct Vector3 {
 	float y;
 	float z;
 };
+struct  Vector2 {
+	float x;
+	float y;
+};
