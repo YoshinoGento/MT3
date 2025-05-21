@@ -42,23 +42,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 v1{ 1.2f,-3.9f,2.5f };
 	Vector3 v2{ 2.8f,0.4f,-1.3f };
 	Vector3 cross = MatrixMath::Cross(v1, v2);
-	VectorScreenPrintf(0, 0, cross, "Cross");
+	
 
 	Vector3 rotate{};
 	Vector3 translate{};
-	Vector3 cameraPosition = { 0.0f,0.0f,0.0f };
+	Vector3 cameraPosition = { 0.0f,0.0f,-1.0f };
 	/*Player player ;*/
 
 	//スクリーン
-	Vector3 screenVertices[3] = {};
-   
-   
+	/*Vector3 screenVertices[3] = {};*/
+
+
 	//三角形の３点
-	Vector3 kLocalVertices[3] = { (2.0f,3.0f,3.0f),(3.0f,1.0f,3.0f),(1.0f,1.0f,3.0f) };
-	/*for (int i = 0; i < 2; i++) {
-		Player player(float(screenVertices[i]), 250);
-	}
-	player.speed_ = 10.0f;*/
+	Vector3 kLocalVertices[3] = { (0.0f,0.0f,0.0f),(0.0f,0.0f,0.0f),(0.0f,0.0f,0.0f) };
+	//Vector3 kLocalVertices[3] = { (0.0f,1.0f,0.0f),(-1.0f,-0.5f,0.0f),(1.0f,-0.5f,0.0f) };
+
+	
+
+
+	/*Player player[3];
+	for (int i = 0; i < 2; i++) {
+		player[i].speed_ = 10.0f;
+	}*/
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -72,18 +78,49 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-		
+
+
 		//各種行列の計算
 		Matrix4x4 worldMatrix = MatrixMath::MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
+
 		Matrix4x4 cameraMatrix = MatrixMath::MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, { 0.0f,0.0f,0.0f }, cameraPosition);
+
 		Matrix4x4 viewMatrix = MatrixMath::Inverse(cameraMatrix);
+
 		Matrix4x4 projectionMatrix = MatrixMath::MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
+
 		Matrix4x4 worldViewProjectionMatrix = MatrixMath::Multiply(worldMatrix, MatrixMath::Multiply(viewMatrix, projectionMatrix));
+
 		Matrix4x4 viewportMatrix = MatrixMath::MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
+
+		//スクリーン
 		Vector3 screenVertices[3];
 		for (uint32_t i = 0; i < 3; ++i) {
+
 			Vector3 ndcVertex = MatrixMath::Transform(kLocalVertices[i], worldViewProjectionMatrix);
-			screenVertices[i] = MatrixMath::Transform(ndcVertex, viewMatrix);
+
+			screenVertices[i] = MatrixMath::Transform(ndcVertex, viewportMatrix);
+
+
+
+			/*if (keys[DIK_W]) {
+				screenVertices[i].y -= player[i].speed_;
+			}
+			if (keys[DIK_S]) {
+				screenVertices[i].y += player[i].speed_;
+			}
+			if (keys[DIK_A]) {
+				screenVertices[i].x -= player[i].speed_;
+			}
+			if (keys[DIK_D]) {
+				screenVertices[i].x += player[i].speed_;
+			}
+			if (keys[DIK_E]) {
+				screenVertices[i].z -= player[i].speed_;
+			}
+			if (keys[DIK_Q]) {
+				screenVertices[i].z += player[i].speed_;
+			}*/
 		}
 
 		///
@@ -99,6 +136,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			int(screenVertices[1].x), int(screenVertices[1].y),
 			int(screenVertices[2].x), int(screenVertices[2].y),
 			RED, kFillModeSolid);
+
+		for (int i = 0; i < 3; ++i) {
+
+			Novice::ScreenPrintf(i , i*15, "screenVertices:x = %f,y = %f,z = %f", screenVertices[i].x, screenVertices[i].y,screenVertices[i].z);
+		}
+		//VectorScreenPrintf(0, 0, cross, "Cross");
 		///
 		/// ↑描画処理ここまで
 		///

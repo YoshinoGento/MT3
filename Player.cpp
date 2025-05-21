@@ -9,16 +9,16 @@
 //    position_ = Vector2(x, y);
 //}
 
-void Player::Move(char* keys) {
-	if (keys[DIK_W]) {
-		position.y -= speed_;
-	}
-	if (keys[DIK_S]) {
-		position.y += speed_;
-	}
-	if (keys[DIK_A]) {
-		position.x -= speed_;
-	}
-	if (keys[DIK_D]) {
-		position.x += speed_;
-	}
+//void Player::Move(char* keys) {
+//	if (keys[DIK_W]) {
+//		position.y -= speed_;
+//	}
+//	if (keys[DIK_S]) {
+//		position.y += speed_;
+//	}
+//	if (keys[DIK_A]) {
+//		position.x -= speed_;
+//	}
+//	if (keys[DIK_D]) {
+//		position.x += speed_;
+//	}
