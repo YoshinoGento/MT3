@@ -249,3 +249,57 @@ Vector3 MatrixMath::Transform(const Vector3& vector, const Matrix4x4& matrix) {
 
 	return result;
 }
+
+void MatrixMath::DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrx, const Matrix4x4& viewportMatrix, uint32_t color) {  
+   //// Transform the sphere's center using the viewProjectionMatrix  
+   //Vector3 transformedCenter = Transform(sphere.center, viewProjectionMatrx);  
+
+   //// Transform the center again using the viewportMatrix  
+   //transformedCenter = Transform(transformedCenter, viewportMatrix);  
+
+   //// Calculate the screen-space radius of the sphere  
+   //float screenRadius = sphere.radius * viewProjectionMatrx.m[0][0];  
+
+   //// Draw the sphere using the transformed center and screen radius  
+   //Novice::DrawEllipse(static_cast<int>(transformedCenter.x),  
+   //                    static_cast<int>(transformedCenter.y),  
+   //                    static_cast<int>(screenRadius),  
+   //                    static_cast<int>(screenRadius),  
+   //                    0.0f,  
+   //                    color,  
+   //                    kFillModeSolid);  
+
+
+
+}
+
+void MatrixMath::DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
+	const float kGridHalfWindth = 2.0f;                                      // Gridの半分の幅
+	const uint32_t kSubdivision = 10;                                        // 分割数
+	const float kGridEvery = (kGridHalfWindth * 2.0f) / float(kSubdivision); // 一つ分の長さ
+	//奥から手前への線を順々に引いていく
+	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
+		//上の情報を使ってワールド座標系上の始点と終点を求める
+
+		// x座標は固定、zが -kGridHalfWindth ～ +kGridHalfWindth まで
+		float x = -kGridHalfWindth + xIndex * kGridEvery;
+		Vector3 start = { x, 0.0f, -kGridHalfWindth };
+		Vector3 end = { x, 0.0f,  kGridHalfWindth };
+
+		//スクリーン座標系まで変換をかける
+
+
+		//変換した座標を使って表示。色はうすい灰色(0xAAAAAAFF)、原点は黒ぐらいがいいが、何でもいい？
+		Novice::DrawLine();
+	}
+
+	//左から右も同じように順々に引いていく
+	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
+		//奥から手前が左右に変わるだけ
+	}
+
+	
+	
+
+
+}
