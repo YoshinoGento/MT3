@@ -274,32 +274,43 @@ void MatrixMath::DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectio
 }
 
 void MatrixMath::DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
-	const float kGridHalfWindth = 2.0f;                                      // Gridの半分の幅
-	const uint32_t kSubdivision = 10;                                        // 分割数
-	const float kGridEvery = (kGridHalfWindth * 2.0f) / float(kSubdivision); // 一つ分の長さ
-	//奥から手前への線を順々に引いていく
+	const float kGridHalfWidth = 2.0f;                                       //Gridの半分の幅
+	const uint32_t kSubdivision = 10;                                        //分割数
+	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);  //一つ分の長さ
+	//奥から手前への線を順々に引いてく
 	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
+		float x = -kGridHalfWidth + kGridEvery * xIndex;
 		//上の情報を使ってワールド座標系上の始点と終点を求める
-
-		// x座標は固定、zが -kGridHalfWindth ～ +kGridHalfWindth まで
-		float x = -kGridHalfWindth + xIndex * kGridEvery;
-		Vector3 start = { x, 0.0f, -kGridHalfWindth };
-		Vector3 end = { x, 0.0f,  kGridHalfWindth };
+		Vector3 start = { x, 0.0f, -kGridHalfWidth };
+		Vector3 end = { x, 0.0f, kGridHalfWidth };
 
 		//スクリーン座標系まで変換をかける
+		Vector3 ndcStart = Transform(start, Multiply(viewProjectionMatrix, viewportMatrix));
+		Vector3 ndcEnd = Transform(end, Multiply(viewProjectionMatrix, viewportMatrix));
 
+		//変換した座標系を使って表示。
+		Novice::DrawLine(
+			static_cast<int>(ndcStart.x), static_cast<int>(ndcStart.y),
+			static_cast<int>(ndcEnd.x), static_cast<int>(ndcEnd.y),
+			0xAAAAAAFF
+		);
 
-		//変換した座標を使って表示。色はうすい灰色(0xAAAAAAFF)、原点は黒ぐらいがいいが、何でもいい？
-		Novice::DrawLine();
 	}
-
-	//左から右も同じように順々に引いていく
 	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
-		//奥から手前が左右に変わるだけ
+		float z = -kGridHalfWidth + kGridEvery * zIndex;
+		//上の情報を使ってワールド座標系上の始点と終点を求める
+		Vector3 start = { -kGridHalfWidth, 0.0f, z };
+		Vector3 end = { kGridHalfWidth, 0.0f, z };
+
+		//スクリーン座標系まで変換をかける
+		Vector3 ndcStart = Transform(start, Multiply(viewProjectionMatrix, viewportMatrix));
+		Vector3 ndcEnd = Transform(end, Multiply(viewProjectionMatrix, viewportMatrix));
+
+		//変換した座標系を使って表示。
+		Novice::DrawLine(
+			static_cast<int>(ndcStart.x), static_cast<int>(ndcStart.y),
+			static_cast<int>(ndcEnd.x), static_cast<int>(ndcEnd.y),
+			0xAAAAAAFF
+		);
 	}
-
-	
-	
-
-
 }
