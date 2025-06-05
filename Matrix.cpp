@@ -2,6 +2,9 @@
 #include "Matrix.h"
 #include "math.h"
 #include <cmath>
+#include <numbers>
+
+float pi = std::numbers::pi_v<float>;     // float版のπ
 
 
 //1.透視投影行列
@@ -54,7 +57,7 @@ Matrix4x4 MatrixMath::MakeScaleMatrix(const Vector3& scale) {
 	   {0,  scale.y, 0,  0},  // 縦の大きさ（y方向）
 	   {0,  0,  scale.z, 0},  // 奥行きの大きさ（z方向）
 	   {0,  0,  0,  1}        // おまじない（そのままでOK）
-    } };
+	} };
 
 	return result;
 }
@@ -158,9 +161,9 @@ Matrix4x4 MatrixMath::Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 //クロス積
 Vector3 MatrixMath::Cross(const Vector3& v1, const Vector3& v2) {
 	Vector3 result{
-		(v1.y*v2.z)-(v1.z*v2.y),
-		(v1.z*v2.x)-(v1.x*v2.z),
-		(v1.x*v2.y)-(v1.y*v2.x)
+		(v1.y * v2.z) - (v1.z * v2.y),
+		(v1.z * v2.x) - (v1.x * v2.z),
+		(v1.x * v2.y) - (v1.y * v2.x)
 	};
 	return result;
 }
@@ -250,67 +253,121 @@ Vector3 MatrixMath::Transform(const Vector3& vector, const Matrix4x4& matrix) {
 	return result;
 }
 
-void MatrixMath::DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrx, const Matrix4x4& viewportMatrix, uint32_t color) {  
-   //// Transform the sphere's center using the viewProjectionMatrix  
-   //Vector3 transformedCenter = Transform(sphere.center, viewProjectionMatrx);  
+void MatrixMath::DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	const uint32_t kSubdivision = 20;  // 分割数  
+	const float kLonEvery = 2.0f * pi / kSubdivision;  // 経度分割1つ分の角度  
+	const float kLatEvery = pi / kSubdivision;  // 緯度分割1つ分の角度  
 
-   //// Transform the center again using the viewportMatrix  
-   //transformedCenter = Transform(transformedCenter, viewportMatrix);  
+	// 緯度の方向に分割 -π/2 ∼ π/2  
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		float lat = -pi / 2.0f + kLatEvery * latIndex;  // 現在の緯度  
+		float nextLat = lat + kLatEvery;  // 次の緯度  
 
-   //// Calculate the screen-space radius of the sphere  
-   //float screenRadius = sphere.radius * viewProjectionMatrx.m[0][0];  
+		// 経度の方向に分割 0 ～ 2π  
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			float lon = lonIndex * kLonEvery;  // 現在の経度  
+			float nextLon = lon + kLonEvery;  // 次の経度  
 
-   //// Draw the sphere using the transformed center and screen radius  
-   //Novice::DrawEllipse(static_cast<int>(transformedCenter.x),  
-   //                    static_cast<int>(transformedCenter.y),  
-   //                    static_cast<int>(screenRadius),  
-   //                    static_cast<int>(screenRadius),  
-   //                    0.0f,  
-   //                    color,  
-   //                    kFillModeSolid);  
+			// ワールド座標系でのa, b, c, dを求める  
+			Vector3 a = {
+				sphere.center.x + sphere.radius * cosf(lat) * cosf(lon),
+				sphere.center.y + sphere.radius * sinf(lat),
+				sphere.center.z + sphere.radius * cosf(lat) * sinf(lon)
+			};
+			Vector3 b = {
+				sphere.center.x + sphere.radius * cosf(nextLat) * cosf(lon),
+				sphere.center.y + sphere.radius * sinf(nextLat),
+				sphere.center.z + sphere.radius * cosf(nextLat) * sinf(lon)
+			};
+			Vector3 c = {
+				sphere.center.x + sphere.radius * cosf(lat) * cosf(nextLon),
+				sphere.center.y + sphere.radius * sinf(lat),
+				sphere.center.z + sphere.radius * cosf(lat) * sinf(nextLon)
+			};
+			Vector3 d = {
+				sphere.center.x + sphere.radius * cosf(nextLat) * cosf(nextLon),
+				sphere.center.y + sphere.radius * sinf(nextLat),
+				sphere.center.z + sphere.radius * cosf(nextLat) * sinf(nextLon)
+			};
 
+			// a, b, c, dをScreen座標系まで変換  
+			a = Transform(a, Multiply(viewProjectionMatrix, viewportMatrix));
+			b = Transform(b, Multiply(viewProjectionMatrix, viewportMatrix));
+			c = Transform(c, Multiply(viewProjectionMatrix, viewportMatrix));
+			d = Transform(d, Multiply(viewProjectionMatrix, viewportMatrix));
 
-
+			// ab, ac, bd, cdで線を引く  
+			Novice::DrawLine(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(b.x), static_cast<int>(b.y), color);
+			Novice::DrawLine(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(c.x), static_cast<int>(c.y), color);
+			Novice::DrawLine(static_cast<int>(b.x), static_cast<int>(b.y), static_cast<int>(d.x), static_cast<int>(d.y), color);
+			Novice::DrawLine(static_cast<int>(c.x), static_cast<int>(c.y), static_cast<int>(d.x), static_cast<int>(d.y), color);
+		}
+	}
 }
 
 void MatrixMath::DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
-	const float kGridHalfWidth = 2.0f;                                       //Gridの半分の幅
-	const uint32_t kSubdivision = 10;                                        //分割数
-	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);  //一つ分の長さ
-	//奥から手前への線を順々に引いてく
+	const float kGridHalfWidth = 2.0f;                                       // Gridの半分の幅
+	const uint32_t kSubdivision = 10;                                        // 分割数
+	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);  // 一つ分の長さ
+	unsigned color = 0xAAAAAAFF; // 色を定義
+
+	// 奥から手前への線を順々に引く
 	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
 		float x = -kGridHalfWidth + kGridEvery * xIndex;
-		//上の情報を使ってワールド座標系上の始点と終点を求める
+		// 上の情報を使ってワールド座標系上の始点と終点を求める
 		Vector3 start = { x, 0.0f, -kGridHalfWidth };
 		Vector3 end = { x, 0.0f, kGridHalfWidth };
 
-		//スクリーン座標系まで変換をかける
+		// スクリーン座標系まで変換をかける
 		Vector3 ndcStart = Transform(start, Multiply(viewProjectionMatrix, viewportMatrix));
 		Vector3 ndcEnd = Transform(end, Multiply(viewProjectionMatrix, viewportMatrix));
 
-		//変換した座標系を使って表示。
+		// 変換した座標系を使って表示。
 		Novice::DrawLine(
 			static_cast<int>(ndcStart.x), static_cast<int>(ndcStart.y),
 			static_cast<int>(ndcEnd.x), static_cast<int>(ndcEnd.y),
-			0xAAAAAAFF
+			color
 		);
-
+		if (xIndex == 4) {
+			color = BLACK;
+		} else {
+			color = 0xAAAAAAFF;
+		}
 	}
+
 	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
 		float z = -kGridHalfWidth + kGridEvery * zIndex;
-		//上の情報を使ってワールド座標系上の始点と終点を求める
+		// 上の情報を使ってワールド座標系上の始点と終点を求める
 		Vector3 start = { -kGridHalfWidth, 0.0f, z };
 		Vector3 end = { kGridHalfWidth, 0.0f, z };
 
-		//スクリーン座標系まで変換をかける
+		// スクリーン座標系まで変換をかける
 		Vector3 ndcStart = Transform(start, Multiply(viewProjectionMatrix, viewportMatrix));
 		Vector3 ndcEnd = Transform(end, Multiply(viewProjectionMatrix, viewportMatrix));
 
-		//変換した座標系を使って表示。
+		// 変換した座標系を使って表示。
 		Novice::DrawLine(
 			static_cast<int>(ndcStart.x), static_cast<int>(ndcStart.y),
 			static_cast<int>(ndcEnd.x), static_cast<int>(ndcEnd.y),
-			0xAAAAAAFF
+			color // 定義した色を使用
 		);
+
+		if (zIndex == 4) {
+			color = BLACK;
+		} else {
+			color = 0xAAAAAAFF;
+		}
 	}
+}
+
+Matrix4x4 MatrixMath::MakeIdentity() {
+	Matrix4x4 result{};
+
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			result.m[i][j] = (i == j) ? 1.0f : 0.0f;
+		}
+	}
+
+	return result;
 }

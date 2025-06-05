@@ -6,6 +6,7 @@
 struct Matrix4x4 {  
    float m[4][4];  
 };  
+
 namespace MatrixMath {  
 
    //1.透視投影行列  
@@ -54,5 +55,5 @@ namespace MatrixMath {
    void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix);  
 
 
-   //ワールド座標変換
+   Matrix4x4 MakeIdentity();
 };
