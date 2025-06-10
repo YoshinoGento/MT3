@@ -466,3 +466,17 @@ Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 		segment.origin.z + segVec.z * t
 	};
 }
+
+bool MatrixMath::IsCollision(const Sphere& s1, const Sphere& s2) {
+	// 2つの中心の差分ベクトル
+	Vector3 diff = MatrixMath::Subtract(s1.center, s2.center);
+
+	// 距離の2乗を計算（平方根を使わない高速バージョン）
+	float distanceSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+
+	// 半径の合計
+	float radiusSum = s1.radius + s2.radius;
+
+	// 半径の合計の2乗と比較
+	return distanceSq <= (radiusSum * radiusSum);
+}

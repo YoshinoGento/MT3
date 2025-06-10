@@ -112,20 +112,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix = MatrixMath::MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
 
-		//球
-		//pointを線分に射影したベクトル。今回は正しく計算できているかを確認するためだけに使う
-		Vector3 project = MatrixMath::Project(MatrixMath::Subtract(point, segment.origin), segment.diff);
-		//この値が線分上の点を表す
-		Vector3 closestPoint = MatrixMath::ClosestPoint(point, segment);
-
-		Sphere pointSphere{ point,0.01f };//1cmの球を描画
-		Sphere closestPointSphere{ closestPoint,0.01f };																																												
+																																									
 																																																																	
 																																								
-		//線分																																									
-		Vector3 start = MatrixMath::Transform(MatrixMath::Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
-		Vector3 end = MatrixMath::Transform(MatrixMath::Transform(MatrixMath::Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
-		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
+		
 
 
 		///																							
@@ -136,18 +126,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixMath::DrawSphere(pointSphere, viewProjectionMatrix, viewportMatrix, RED);
-		MatrixMath::DrawSphere(closestPointSphere, viewProjectionMatrix, viewportMatrix, BLACK);
+		MatrixMath::DrawSphere(sphere, worldViewProjectionMatrix, viewportMatrix, BLACK);
 
 		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 		
 
 
 		ImGui::Begin("Window");
+		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
+		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("Point", &point.x, 0.01f);
-		ImGui::DragFloat3("segmentOrigin", &segment.origin.x, 0.01f); // ←中心座標
-		ImGui::DragFloat("segmentDiff", &segment.diff.x, 0.01f);     // ←半径
-		ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
+		//ImGui::DragFloat3("segmentOrigin", &segment.origin.x, 0.01f); // ←中心座標
+		//ImGui::DragFloat("segmentDiff", &segment.diff.x, 0.01f);     // ←半径
+		//ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::End();
 		///
 		/// ↑描画処理ここまで

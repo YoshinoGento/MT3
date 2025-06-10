@@ -75,4 +75,8 @@ namespace MatrixMath {
 
    Vector3 ClosestPoint(const Vector3& point, const Segment &segment);
 
+   //当たり判定 
+   bool IsCollision(const Sphere& s1, const Sphere& s2);
+   
+
 };
