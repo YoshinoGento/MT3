@@ -48,13 +48,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
 	Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 
-	Sphere sphere = { {0.0f, 1.0f, 0.0f}, 1.5f }; // 中心が(0,1,0)、半径1.5の球
+	Sphere spherePlayer = { {0.0f, 1.0f, 0.0f}, 1.5f }; // 中心が(0,1,0)、半径1.5の球
+	Sphere sphereEnemy  = { {0.5f, 1.0f, 0.0f}, 1.0f }; // 中心が(0,1,0)、半径1.5の球
 
 	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 
 	Vector3 point{ -1.5f,0.6f,0.6f };
 
-	
+	unsigned int color = BLACK;
 
 	//pointを線分に射影したベクトル。今回は正しく計算できているかを確認するためだけに使う
 	//Vector3 closestPoint = ClosestPoint(point, segment);
@@ -126,7 +127,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixMath::DrawSphere(sphere, worldViewProjectionMatrix, viewportMatrix, BLACK);
+		MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, BLACK);
+
+		if (MatrixMath::IsCollision(spherePlayer,sphereEnemy,color)) {
+
+			MatrixMath::DrawSphere(sphereEnemy, worldViewProjectionMatrix, viewportMatrix, color);
+		}
 
 		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 		
@@ -135,7 +141,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Begin("Window");
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("Point", &point.x, 0.01f);
+		ImGui::DragFloat3("spherePlayerRadius", &spherePlayer.radius, 0.01f);
+		ImGui::DragFloat3("sphereEnemyRadius", &sphereEnemy.radius, 0.01f);
+		ImGui::DragFloat3("spherePlayerCenter", &spherePlayer.center.x, 0.01f); // ←中心座標
+		ImGui::DragFloat3("sphereEnemyCenter", &sphereEnemy.center.x, 0.01f); // ←中心座標
+		/*ImGui::DragFloat3("Point", &point.x, 0.01f);*/
 		//ImGui::DragFloat3("segmentOrigin", &segment.origin.x, 0.01f); // ←中心座標
 		//ImGui::DragFloat("segmentDiff", &segment.diff.x, 0.01f);     // ←半径
 		//ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);

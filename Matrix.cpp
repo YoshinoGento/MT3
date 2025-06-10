@@ -417,8 +417,7 @@ Matrix4x4 MatrixMath::MakeIdentity() {
 	return result;
 }
 
-Vector3 MatrixMath::Project(const Vector3& v1, const Vector3& v2) 
-{
+Vector3 MatrixMath::Project(const Vector3& v1, const Vector3& v2) {
 	// v2への正規化を使ったv1の射影
 	float dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 	float v2LengthSq = v2.x * v2.x + v2.y * v2.y + v2.z * v2.z;
@@ -467,7 +466,7 @@ Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 	};
 }
 
-bool MatrixMath::IsCollision(const Sphere& s1, const Sphere& s2) {
+bool MatrixMath::IsCollision(const Sphere& s1, const Sphere& s2, unsigned int& color) {
 	// 2つの中心の差分ベクトル
 	Vector3 diff = MatrixMath::Subtract(s1.center, s2.center);
 
@@ -477,6 +476,14 @@ bool MatrixMath::IsCollision(const Sphere& s1, const Sphere& s2) {
 	// 半径の合計
 	float radiusSum = s1.radius + s2.radius;
 
-	// 半径の合計の2乗と比較
-	return distanceSq <= (radiusSum * radiusSum);
+
+	if (distanceSq <= (radiusSum * radiusSum)) {
+		color = RED; // 赤に変更
+		
+	} else {
+
+		color = BLACK;
+
+	}
+	return color;
 }
