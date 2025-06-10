@@ -46,10 +46,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraPosition = { 0.0f,0.0f,-1.0f };
 	
 	Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
-	Vector3 cameraRotate{ 0.26f,0.0f,-1.0f };
+	Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 
 	Sphere sphere = { {0.0f, 1.0f, 0.0f}, 1.5f }; // 中心が(0,1,0)、半径1.5の球
 
+	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
+
+	Vector3 point{ -1.5f,0.6f,0.6f };
+
+	
+
+	//pointを線分に射影したベクトル。今回は正しく計算できているかを確認するためだけに使う
+	//Vector3 closestPoint = ClosestPoint(point, segment);
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -103,13 +111,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// ビューポート行列
 		Matrix4x4 viewportMatrix = MatrixMath::MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-		// 描画
-		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-		MatrixMath::DrawSphere(sphere, worldViewProjectionMatrix, viewportMatrix, BLACK);
 
-		
+		//球
+		//pointを線分に射影したベクトル。今回は正しく計算できているかを確認するためだけに使う
+		Vector3 project = MatrixMath::Project(MatrixMath::Subtract(point, segment.origin), segment.diff);
+		//この値が線分上の点を表す
+		Vector3 closestPoint = MatrixMath::ClosestPoint(point, segment);
 
-		///
+		Sphere pointSphere{ point,0.01f };//1cmの球を描画
+		Sphere closestPointSphere{ closestPoint,0.01f };																																												
+																																																																	
+																																								
+		//線分																																									
+		Vector3 start = MatrixMath::Transform(MatrixMath::Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
+		Vector3 end = MatrixMath::Transform(MatrixMath::Transform(MatrixMath::Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
+
+
+		///																							
 		/// ↑更新処理ここまで
 		///
 
@@ -117,15 +136,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
+		MatrixMath::DrawSphere(pointSphere, viewProjectionMatrix, viewportMatrix, RED);
+		MatrixMath::DrawSphere(closestPointSphere, viewProjectionMatrix, viewportMatrix, BLACK);
+
 		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-		MatrixMath::DrawSphere(sphere, worldViewProjectionMatrix, viewportMatrix, BLACK);
+		
 
 
 		ImGui::Begin("Window");
-		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
-		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f); // ←中心座標
-		ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);     // ←半径
+		ImGui::DragFloat3("Point", &point.x, 0.01f);
+		ImGui::DragFloat3("segmentOrigin", &segment.origin.x, 0.01f); // ←中心座標
+		ImGui::DragFloat("segmentDiff", &segment.diff.x, 0.01f);     // ←半径
+		ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
 		ImGui::End();
 		///
 		/// ↑描画処理ここまで

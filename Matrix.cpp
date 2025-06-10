@@ -3,8 +3,53 @@
 #include "math.h"
 #include <cmath>
 #include <numbers>
+#include <algorithm> // clamp に必要
 
 float pi = std::numbers::pi_v<float>;     // float版のπ
+
+
+////加法
+//Matrix4x4 MatrixMath::Add(const Matrix4x4& m1, const Matrix4x4& m2) {
+//	Matrix4x4 result;
+//	for (int row = 0; row < 4; row++) {
+//		for (int col = 0; col < 4; col++) {
+//			result.m[row][col] = m1.m[row][col] + m2.m[row][col];
+//		}
+//	}
+//
+//	return result;
+//}
+//
+////減法
+//Matrix4x4 MatrixMath::Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
+//	Matrix4x4 result;
+//	for (int row = 0; row < 4; row++) {
+//		for (int col = 0; col < 4; col++) {
+//			result.m[row][col] = m1.m[row][col] - m2.m[row][col];
+//		}
+//	}
+//
+//	return result;
+//}
+
+Vector3	MatrixMath::Add(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x + v2.x;
+	result.y = v1.y + v2.y;
+	result.z = v1.z + v2.z;
+	return result;
+}
+
+
+
+Vector3 MatrixMath::Subtract(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x - v2.x;
+	result.y = v1.y - v2.y;
+	result.z = v1.z - v2.z;
+	return result;
+}
+
 
 
 //1.透視投影行列
@@ -370,4 +415,54 @@ Matrix4x4 MatrixMath::MakeIdentity() {
 	}
 
 	return result;
+}
+
+Vector3 MatrixMath::Project(const Vector3& v1, const Vector3& v2) 
+{
+	// v2への正規化を使ったv1の射影
+	float dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+	float v2LengthSq = v2.x * v2.x + v2.y * v2.y + v2.z * v2.z;
+	float scale = dot / v2LengthSq;
+
+	return {
+		v2.x * scale,
+		v2.y * scale,
+		v2.z * scale
+	};
+}
+
+
+Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
+	// 線分の終点を計算
+	Vector3 end = {
+		segment.origin.x + segment.diff.x,
+		segment.origin.y + segment.diff.y,
+		segment.origin.z + segment.diff.z
+	};
+
+	// 線分の方向ベクトル
+	Vector3 segVec = {
+		end.x - segment.origin.x,
+		end.y - segment.origin.y,
+		end.z - segment.origin.z
+	};
+
+	// 点から線分の始点へのベクトル
+	Vector3 toPoint = {
+		point.x - segment.origin.x,
+		point.y - segment.origin.y,
+		point.z - segment.origin.z
+	};
+
+	float dot = toPoint.x * segVec.x + toPoint.y * segVec.y + toPoint.z * segVec.z;
+	float lengthSq = segVec.x * segVec.x + segVec.y * segVec.y + segVec.z * segVec.z;
+
+	float t = dot / lengthSq;
+	t = std::clamp(t, 0.0f, 1.0f); // 線分上にクランプ
+
+	return {
+		segment.origin.x + segVec.x * t,
+		segment.origin.y + segVec.y * t,
+		segment.origin.z + segVec.z * t
+	};
 }

@@ -9,6 +9,17 @@ struct Matrix4x4 {
 
 namespace MatrixMath {  
 
+
+	////1.行列の加法
+	//Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2);
+	////2.行列の減法
+	//Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2);
+	
+	//1.行列の加法
+	Vector3 Add(const Vector3 &m1, const Vector3 &m2);
+	//2.行列の減法
+	Vector3 Subtract(const Vector3 &m1, const Vector3 &m2);
+
    //1.透視投影行列  
    Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);  
 
@@ -50,10 +61,18 @@ namespace MatrixMath {
    //3.座標変換  
    Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);  
 
+   //
+   void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrx, const Matrix4x4& viewportMatrix, uint32_t color);
+   
    //グリッド  
-   void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrx, const Matrix4x4& viewportMatrix, uint32_t color);  
    void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix);  
 
-
+   //単位行列
    Matrix4x4 MakeIdentity();
+
+   //
+   Vector3 Project(const Vector3& v1, const Vector3& v2);
+
+   Vector3 ClosestPoint(const Vector3& point, const Segment &segment);
+
 };
