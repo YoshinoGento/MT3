@@ -62,3 +62,8 @@ struct Segment {
         };
     }
 };
+
+struct Plane {
+    Vector3 normal;//!<法線
+    float distance;//!<距離
+};

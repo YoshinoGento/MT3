@@ -158,7 +158,7 @@ Matrix4x4 MatrixMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rota
 	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
 	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
 
-	Matrix4x4 rotateMatrix = Multiply(rotateXMatrix, Multiply(rotateYMatrix, rotateZMatrix));
+	Matrix4x4 rotateMatrix = MultiplyM(rotateXMatrix, MultiplyM(rotateYMatrix, rotateZMatrix));
 
 
 	result = {
@@ -170,6 +170,7 @@ Matrix4x4 MatrixMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rota
 
 	return result;
 }
+
 
 
 //平行移動行列
@@ -187,7 +188,7 @@ Matrix4x4 MatrixMath::MakeTranslateMatrix(const Vector3& translate) {
 
 
 //積
-Matrix4x4 MatrixMath::Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
+Matrix4x4 MatrixMath::MultiplyM(const Matrix4x4& m1, const Matrix4x4& m2) {
 
 	Matrix4x4 result;
 	for (int i = 0; i < 4; ++i) {
@@ -200,6 +201,14 @@ Matrix4x4 MatrixMath::Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 	}
 
 	return result;
+}
+
+Vector3 MatrixMath::MultiplyV(float scalar, const Vector3& v) {
+	return {
+	   v.x * scalar,
+	   v.y * scalar,
+	   v.z * scalar
+	};
 }
 
 
@@ -336,10 +345,10 @@ void MatrixMath::DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectio
 			};
 
 			// a, b, c, dをScreen座標系まで変換  
-			a = Transform(a, Multiply(viewProjectionMatrix, viewportMatrix));
-			b = Transform(b, Multiply(viewProjectionMatrix, viewportMatrix));
-			c = Transform(c, Multiply(viewProjectionMatrix, viewportMatrix));
-			d = Transform(d, Multiply(viewProjectionMatrix, viewportMatrix));
+			a = Transform(a, MultiplyM(viewProjectionMatrix, viewportMatrix));
+			b = Transform(b, MultiplyM(viewProjectionMatrix, viewportMatrix));
+			c = Transform(c, MultiplyM(viewProjectionMatrix, viewportMatrix));
+			d = Transform(d, MultiplyM(viewProjectionMatrix, viewportMatrix));
 
 			// ab, ac, bd, cdで線を引く  
 			Novice::DrawLine(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(b.x), static_cast<int>(b.y), color);
@@ -364,8 +373,8 @@ void MatrixMath::DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4
 		Vector3 end = { x, 0.0f, kGridHalfWidth };
 
 		// スクリーン座標系まで変換をかける
-		Vector3 ndcStart = Transform(start, Multiply(viewProjectionMatrix, viewportMatrix));
-		Vector3 ndcEnd = Transform(end, Multiply(viewProjectionMatrix, viewportMatrix));
+		Vector3 ndcStart = Transform(start, MultiplyM(viewProjectionMatrix, viewportMatrix));
+		Vector3 ndcEnd = Transform(end, MultiplyM(viewProjectionMatrix, viewportMatrix));
 
 		// 変換した座標系を使って表示。
 		Novice::DrawLine(
@@ -387,8 +396,8 @@ void MatrixMath::DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4
 		Vector3 end = { kGridHalfWidth, 0.0f, z };
 
 		// スクリーン座標系まで変換をかける
-		Vector3 ndcStart = Transform(start, Multiply(viewProjectionMatrix, viewportMatrix));
-		Vector3 ndcEnd = Transform(end, Multiply(viewProjectionMatrix, viewportMatrix));
+		Vector3 ndcStart = Transform(start, MultiplyM(viewProjectionMatrix, viewportMatrix));
+		Vector3 ndcEnd = Transform(end, MultiplyM(viewProjectionMatrix, viewportMatrix));
 
 		// 変換した座標系を使って表示。
 		Novice::DrawLine(
@@ -430,6 +439,23 @@ Vector3 MatrixMath::Project(const Vector3& v1, const Vector3& v2) {
 	};
 }
 
+//長さ(ノルム)
+float MatrixMath::Length(const Vector3& v) {
+	float result = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+	return result;
+}
+
+//正規化
+Vector3 MatrixMath::Normalize(const Vector3& v) {
+	Vector3 result;
+	result.x = v.x / Length(v);
+	result.y = v.y / Length(v);
+	result.z = v.z / Length(v);
+	return result;
+}
+
+
+
 
 Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 	// 線分の終点を計算
@@ -466,24 +492,82 @@ Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 	};
 }
 
-bool MatrixMath::IsCollision(const Sphere& s1, const Sphere& s2, unsigned int& color) {
-	// 2つの中心の差分ベクトル
-	Vector3 diff = MatrixMath::Subtract(s1.center, s2.center);
+bool MatrixMath::IsCollision(const Sphere& sphere, const Plane& plane) {
+	// 球の中心から平面までの距離を計算
+  // 平面の方程式: normal・P = distance
+  // ここでは球の中心ベクトルと平面法線ベクトルの内積から距離を求めている
+	float distance = sphere.center.x * plane.normal.x +
+		sphere.center.y * plane.normal.y +
+		sphere.center.z * plane.normal.z - plane.distance;
 
-	// 距離の2乗を計算（平方根を使わない高速バージョン）
-	float distanceSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
-
-	// 半径の合計
-	float radiusSum = s1.radius + s2.radius;
-
-
-	if (distanceSq <= (radiusSum * radiusSum)) {
-		color = RED; // 赤に変更
-		
-	} else {
-
-		color = BLACK;
-
-	}
-	return color;
+	// 球の中心から平面までの距離の絶対値が
+	// 球の半径以下なら衝突していると判断してtrueを返す
+	return std::abs(distance) <= sphere.radius;
 }
+
+void MatrixMath::DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+
+	// 平面の中心点（法線ベクトルに距離を掛けたもの）
+	Vector3 center = MultiplyV(plane.distance, plane.normal);
+
+	// 平面に垂直な2つの単位ベクトルを作成（平面上の軸）
+    Vector3 u = MatrixMath::Normalize(MatrixMath::Perpendicular(plane.normal)); // 法線と垂直な任意のベクトル
+	Vector3 v = MatrixMath::Normalize(Cross(plane.normal, u));                // uと法線に垂直なもう一つのベクトル
+
+	float size = 2.0f; // 平面を描画する正方形の一辺の半分の長さ
+
+	// 平面の四隅の座標を計算（正方形の4頂点）
+	Vector3 corners[4] = {
+		Add(center, Add(MultiplyV(size, u), MultiplyV(size, v))),   // +u +v方向の頂点
+		Add(center, Add(MultiplyV(size, u), MultiplyV(-size, v))),  // +u -v方向の頂点
+		Add(center, Add(MultiplyV(-size, u), MultiplyV(-size, v))), // -u -v方向の頂点
+		Add(center, Add(MultiplyV(-size, u), MultiplyV(size, v)))   // -u +v方向の頂点
+	};
+
+	// 4つの頂点をスクリーン座標に変換して線で繋ぐ
+	// viewProjectionMatrix と viewportMatrix をかけ合わせて変換行列を作成
+	Matrix4x4 transform = MultiplyM(viewProjectionMatrix, viewportMatrix);
+
+	for (int i = 0; i < 4; ++i) {
+		Vector3 screen0 = Transform(corners[i], transform);                 // 頂点iを変換
+		Vector3 screen1 = Transform(corners[(i + 1) % 4], transform);       // 次の頂点を変換
+		Novice::DrawLine(
+			static_cast<int>(screen0.x), static_cast<int>(screen0.y),       // 頂点iのスクリーン座標
+			static_cast<int>(screen1.x), static_cast<int>(screen1.y),       // 頂点i+1のスクリーン座標
+			color                                                           // 線の色
+		);
+	}
+}
+
+Vector3 MatrixMath::Perpendicular(const Vector3& vector) {
+	// vectorと直交する適当なベクトルを返す
+	if (vector.x != 0.0f || vector.y != 0.0f) {
+		return { -vector.y, vector.x, 0.0f };
+	} 
+		return { 0.0f, -vector.z, vector.y };
+}
+
+
+
+//bool matrixmath::iscollision(const sphere& s1, const sphere& s2, unsigned int& color) {
+//
+//	// 2つの中心の差分ベクトル
+//	vector3 diff = matrixmath::subtract(s1.center, s2.center);
+//
+//	// 距離の2乗を計算（平方根を使わない高速バージョン）
+//	float distancesq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+//
+//	// 半径の合計
+//	float radiussum = s1.radius + s2.radius;
+//
+//	if (distancesq <= (radiussum * radiussum)) {
+//
+//		color = red; // 赤に変更
+//		
+//	} else {
+//
+//		color = black;
+//
+//	}
+//	return color;
+//}

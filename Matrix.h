@@ -43,7 +43,10 @@ namespace MatrixMath {
    Matrix4x4 MakeRotateZMatrix(float radian);  
 
    //5.行列の積  
-   Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);  
+   Matrix4x4 MultiplyM(const Matrix4x4& m1, const Matrix4x4& m2);  
+
+   Vector3 MultiplyV(float scalar, const Vector3& v);
+
 
    //平行移動行列  
    Matrix4x4 MakeTranslateMatrix(const Vector3& translate);  
@@ -76,7 +79,16 @@ namespace MatrixMath {
    Vector3 ClosestPoint(const Vector3& point, const Segment &segment);
 
    //当たり判定 
-   bool IsCollision(const Sphere& s1, const Sphere& s2, unsigned int& color);
+   bool IsCollision(const Sphere& sphere,const Plane& plane);
    
+   void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color);
+
+   Vector3 Perpendicular(const Vector3& vector);
+
+   //長さ(ノルム)
+   float Length(const Vector3& v);
+
+   //正規化
+   Vector3 Normalize(const Vector3& v);
 
 };

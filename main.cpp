@@ -28,6 +28,8 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matirix, const char* labe
 	}
 }
 
+
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -42,14 +44,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	
+
 	Vector3 cameraPosition = { 0.0f,0.0f,-1.0f };
-	
+
 	Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
 	Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 
 	Sphere spherePlayer = { {0.0f, 1.0f, 0.0f}, 1.5f }; // 中心が(0,1,0)、半径1.5の球
-	Sphere sphereEnemy  = { {0.5f, 1.0f, 0.0f}, 1.0f }; // 中心が(0,1,0)、半径1.5の球
+	//Sphere sphereEnemy  = { {0.5f, 1.0f, 0.0f}, 1.0f }; // 中心が(0,1,0)、半径1.5の球
+
+	Plane plane = {0.0f,1.0f,0.0f };
 
 	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
 
@@ -75,9 +79,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 
-		
+
 		//各種行列の計算
-		
+
 
 		/*Matrix4x4 cameraMatrix = MatrixMath::MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
 
@@ -106,17 +110,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 worldMatrix = MatrixMath::MakeIdentity();
 
 		// 各種行列の合成
-		Matrix4x4 viewProjectionMatrix = MatrixMath::Multiply(viewMatrix, projectionMatrix);
-		Matrix4x4 worldViewProjectionMatrix = MatrixMath::Multiply(worldMatrix, viewProjectionMatrix);
+		Matrix4x4 viewProjectionMatrix = MatrixMath::MultiplyM(viewMatrix, projectionMatrix);
+		Matrix4x4 worldViewProjectionMatrix = MatrixMath::MultiplyM(worldMatrix, viewProjectionMatrix);
 
 		// ビューポート行列
 		Matrix4x4 viewportMatrix = MatrixMath::MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
 
-																																									
-																																																																	
-																																								
-		
+
 
 
 		///																							
@@ -127,24 +128,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, BLACK);
-
-		if (MatrixMath::IsCollision(spherePlayer,sphereEnemy,color)) {
-
-			MatrixMath::DrawSphere(sphereEnemy, worldViewProjectionMatrix, viewportMatrix, color);
-		}
-
-		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-		
 
 
 		ImGui::Begin("Window");
-		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
-		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("spherePlayerRadius", &spherePlayer.radius, 0.01f);
-		ImGui::DragFloat3("sphereEnemyRadius", &sphereEnemy.radius, 0.01f);
-		ImGui::DragFloat3("spherePlayerCenter", &spherePlayer.center.x, 0.01f); // ←中心座標
-		ImGui::DragFloat3("sphereEnemyCenter", &sphereEnemy.center.x, 0.01f); // ←中心座標
+		ImGui::DragFloat3("Sphere.Center", &spherePlayer.center.x, 0.01f);
+		ImGui::DragFloat("Sphere.Radius", &spherePlayer.radius, 0.01f);
+		ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
+		ImGui::DragFloat("Plane.Distance", &plane.distance, 0.01f);
+
+		plane.normal = MatrixMath::Normalize(plane.normal); // 法線ベクトルを正規化
+
+		// 球と平面の衝突判定
+		if (MatrixMath::IsCollision(spherePlayer, plane)) {
+			color = RED; // 衝突している場合は赤色
+		} else {
+			color = WHITE; // 衝突していない場合は黒色
+		}
+
+		
+
+		MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, color);
+
+		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
+
+		MatrixMath::DrawPlane(plane, viewProjectionMatrix, viewportMatrix, WHITE);
+
 		/*ImGui::DragFloat3("Point", &point.x, 0.01f);*/
 		//ImGui::DragFloat3("segmentOrigin", &segment.origin.x, 0.01f); // ←中心座標
 		//ImGui::DragFloat("segmentDiff", &segment.diff.x, 0.01f);     // ←半径
