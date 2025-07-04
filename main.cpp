@@ -50,7 +50,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
 	Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 
-	Sphere spherePlayer = { {0.0f, 1.0f, 0.0f}, 1.5f }; // 中心が(0,1,0)、半径1.5の球
+	//Sphere spherePlayer = { {0.0f, 1.0f, 0.0f}, 1.5f }; // 中心が(0,1,0)、半径1.5の球
 	//Sphere sphereEnemy  = { {0.5f, 1.0f, 0.0f}, 1.0f }; // 中心が(0,1,0)、半径1.5の球
 
 	Plane plane = {0.0f,1.0f,0.0f };
@@ -131,15 +131,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 		ImGui::Begin("Window");
-		ImGui::DragFloat3("Sphere.Center", &spherePlayer.center.x, 0.01f);
-		ImGui::DragFloat("Sphere.Radius", &spherePlayer.radius, 0.01f);
 		ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
 		ImGui::DragFloat("Plane.Distance", &plane.distance, 0.01f);
+		ImGui::DragFloat3("Segment.Origin", &segment.origin.x, 0.01f);
+		ImGui::DragFloat3("Segment.Diff", &segment.diff.x, 0.01f);
 
 		plane.normal = MatrixMath::Normalize(plane.normal); // 法線ベクトルを正規化
 
 		// 球と平面の衝突判定
-		if (MatrixMath::IsCollision(spherePlayer, plane)) {
+		if (MatrixMath::IsCollision(segment, plane)) {
 			color = RED; // 衝突している場合は赤色
 		} else {
 			color = WHITE; // 衝突していない場合は黒色
@@ -147,7 +147,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		
 
-		MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, color);
+		//MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, color);
 
 		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 

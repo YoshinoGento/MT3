@@ -382,11 +382,6 @@ void MatrixMath::DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4
 			static_cast<int>(ndcEnd.x), static_cast<int>(ndcEnd.y),
 			color
 		);
-		if (xIndex == 4) {
-			color = BLACK;
-		} else {
-			color = 0xAAAAAAFF;
-		}
 	}
 
 	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
@@ -406,11 +401,7 @@ void MatrixMath::DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4
 			color // 定義した色を使用
 		);
 
-		if (zIndex == 4) {
-			color = BLACK;
-		} else {
-			color = 0xAAAAAAFF;
-		}
+		
 	}
 }
 
