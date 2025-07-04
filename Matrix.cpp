@@ -484,17 +484,21 @@ Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 }
 
 bool MatrixMath::IsCollision(const Segment& segment, const Plane& plane) {
-	// 球の中心から平面までの距離を計算
-  // 平面の方程式: normal・P = distance
-  // ここでは球の中心ベクトルと平面法線ベクトルの内積から距離を求めている
-	float distance = segment.diff.x * plane.normal.x +
-		segment.diff.y * plane.normal.y +
-		segment.diff.z * plane.normal.z - plane.distance;
+	// 線分の始点と終点を取得
+	Vector3 start = segment.origin;                  // 線分の始点
+	Vector3 end = segment.origin + segment.diff;     // 線分の終点（始点 + 向きベクトル）
 
-	// 球の中心から平面までの距離の絶対値が
-	// 球の半径以下なら衝突していると判断してtrueを返す
-	return std::abs(distance) <= 0.0f;
+	// 始点と終点から平面までの距離（符号付き）を計算
+	// 平面の方程式: normal・P = distance
+	// ここでは、点と法線の内積 - 平面の距離 で符号付き距離を求めている
+	float d0 = Vector3::Dot(start, plane.normal) - plane.distance; // 始点から平面までの距離
+	float d1 = Vector3::Dot(end, plane.normal) - plane.distance;   // 終点から平面までの距離
+
+	// 始点と終点が平面の両側にあれば、線分は平面と交差している
+	// 例：d0 < 0 かつ d1 > 0、またはその逆、またはどちらかが0（ちょうど接している）
+	return d0 * d1 <= 0.0f;
 }
+
 
 void MatrixMath::DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
 

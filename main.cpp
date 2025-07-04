@@ -55,7 +55,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Plane plane = {0.0f,1.0f,0.0f };
 
-	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
+	Segment segment{ {-0.45f,0.75f,0.8f},{1.6f,-0.58f,-0.8f} };
 
 	Vector3 point{ -1.5f,0.6f,0.6f };
 
@@ -117,7 +117,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix = MatrixMath::MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
 
-
+		//線分																																									
+		Vector3 start = MatrixMath::Transform(MatrixMath::Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
+		Vector3 end = MatrixMath::Transform(MatrixMath::Transform(MatrixMath::Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
 
 
 		///																							
@@ -138,7 +140,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		plane.normal = MatrixMath::Normalize(plane.normal); // 法線ベクトルを正規化
 
-		// 球と平面の衝突判定
+		// 線と平面の衝突判定
 		if (MatrixMath::IsCollision(segment, plane)) {
 			color = RED; // 衝突している場合は赤色
 		} else {
@@ -146,6 +148,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 		
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
 
 		//MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, color);
 
