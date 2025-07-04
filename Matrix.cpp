@@ -492,17 +492,17 @@ Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 	};
 }
 
-bool MatrixMath::IsCollision(const Sphere& sphere, const Plane& plane) {
+bool MatrixMath::IsCollision(const Segment& segment, const Plane& plane) {
 	// 球の中心から平面までの距離を計算
   // 平面の方程式: normal・P = distance
   // ここでは球の中心ベクトルと平面法線ベクトルの内積から距離を求めている
-	float distance = sphere.center.x * plane.normal.x +
-		sphere.center.y * plane.normal.y +
-		sphere.center.z * plane.normal.z - plane.distance;
+	float distance = segment.diff.x * plane.normal.x +
+		segment.diff.y * plane.normal.y +
+		segment.diff.z * plane.normal.z - plane.distance;
 
 	// 球の中心から平面までの距離の絶対値が
 	// 球の半径以下なら衝突していると判断してtrueを返す
-	return std::abs(distance) <= sphere.radius;
+	return std::abs(distance) <= 0.0f;
 }
 
 void MatrixMath::DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
