@@ -222,6 +222,11 @@ Vector3 MatrixMath::Cross(const Vector3& v1, const Vector3& v2) {
 	return result;
 }
 
+//内積
+float MatrixMath::Dot(const Vector3& v1, const Vector3& v2) {
+	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
 
 //逆行列
 Matrix4x4 MatrixMath::Inverse(const Matrix4x4& m) {
@@ -486,17 +491,17 @@ Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 bool MatrixMath::IsCollision(const Segment& segment, const Plane& plane) {
 	// 線分の始点と終点を取得
 	Vector3 start = segment.origin;                  // 線分の始点
-	Vector3 end = segment.origin + segment.diff;     // 線分の終点（始点 + 向きベクトル）
+	Vector3 end = Add(segment.origin , segment.diff);     // 線分の終点（始点 + 向きベクトル）
 
 	// 始点と終点から平面までの距離（符号付き）を計算
 	// 平面の方程式: normal・P = distance
 	// ここでは、点と法線の内積 - 平面の距離 で符号付き距離を求めている
-	float d0 = Vector3::Dot(start, plane.normal) - plane.distance; // 始点から平面までの距離
-	float d1 = Vector3::Dot(end, plane.normal) - plane.distance;   // 終点から平面までの距離
+	float startDist = MatrixMath::Dot(start, plane.normal) - plane.distance; // 始点から平面までの距離
+	float endDist = MatrixMath::Dot(end, plane.normal) - plane.distance;   // 終点から平面までの距離
 
 	// 始点と終点が平面の両側にあれば、線分は平面と交差している
 	// 例：d0 < 0 かつ d1 > 0、またはその逆、またはどちらかが0（ちょうど接している）
-	return d0 * d1 <= 0.0f;
+	return startDist * endDist <= 0.0f;
 }
 
 

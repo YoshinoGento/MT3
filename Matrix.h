@@ -58,6 +58,9 @@ namespace MatrixMath {
    //クロス積  
    Vector3 Cross(const Vector3& v1, const Vector3& v2);  
 
+   //内積
+   float Dot(const Vector3& v1, const Vector3& v2);
+
    //4.逆行列  
    Matrix4x4 Inverse(const Matrix4x4& m);  
 
