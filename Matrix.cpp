@@ -488,7 +488,7 @@ Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 	};
 }
 
-bool MatrixMath::IsCollision(const Segment& segment, const Plane& plane) {
+bool MatrixMath::IsCollision(const Triangle &triangle,const Segment &segment) {
 	// 線分の始点と終点を取得
 	Vector3 start = segment.origin;                  // 線分の始点
 	Vector3 end = Add(segment.origin , segment.diff);     // 線分の終点（始点 + 向きベクトル）
@@ -496,7 +496,7 @@ bool MatrixMath::IsCollision(const Segment& segment, const Plane& plane) {
 	// 始点と終点から平面までの距離（符号付き）を計算
 	// 平面の方程式: normal・P = distance
 	// ここでは、点と法線の内積 - 平面の距離 で符号付き距離を求めている
-	float startDist = MatrixMath::Dot(start, plane.normal) - plane.distance; // 始点から平面までの距離
+	float startDist = MatrixMath::Dot(start, triangle.normal) - plane.distance; // 始点から平面までの距離
 	float endDist = MatrixMath::Dot(end, plane.normal) - plane.distance;   // 終点から平面までの距離
 
 	// 始点と終点が平面の両側にあれば、線分は平面と交差している
@@ -517,26 +517,39 @@ void MatrixMath::DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMa
 	float size = 2.0f; // 平面を描画する正方形の一辺の半分の長さ
 
 	// 平面の四隅の座標を計算（正方形の4頂点）
-	Vector3 corners[4] = {
+	Vector3 corners[3] = {
 		Add(center, Add(MultiplyV(size, u), MultiplyV(size, v))),   // +u +v方向の頂点
 		Add(center, Add(MultiplyV(size, u), MultiplyV(-size, v))),  // +u -v方向の頂点
 		Add(center, Add(MultiplyV(-size, u), MultiplyV(-size, v))), // -u -v方向の頂点
-		Add(center, Add(MultiplyV(-size, u), MultiplyV(size, v)))   // -u +v方向の頂点
 	};
 
 	// 4つの頂点をスクリーン座標に変換して線で繋ぐ
 	// viewProjectionMatrix と viewportMatrix をかけ合わせて変換行列を作成
 	Matrix4x4 transform = MultiplyM(viewProjectionMatrix, viewportMatrix);
 
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		Vector3 screen0 = Transform(corners[i], transform);                 // 頂点iを変換
-		Vector3 screen1 = Transform(corners[(i + 1) % 4], transform);       // 次の頂点を変換
+		Vector3 screen1 = Transform(corners[(i + 1) % 3], transform);       // 次の頂点を変換
 		Novice::DrawLine(
 			static_cast<int>(screen0.x), static_cast<int>(screen0.y),       // 頂点iのスクリーン座標
 			static_cast<int>(screen1.x), static_cast<int>(screen1.y),       // 頂点i+1のスクリーン座標
 			color                                                           // 線の色
 		);
 	}
+}
+
+void MatrixMath::DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+
+	Vector3 screenV[3];
+	for (int i = 0; i < 3; ++i) {
+		screenV[i] = Transform(Transform(triangle.vertex[i], viewProjectionMatrix), viewportMatrix);
+	}
+	Novice::DrawTriangle(
+		(int)screenV[0].x, (int)screenV[0].y,
+		(int)screenV[1].x, (int)screenV[1].y,
+		(int)screenV[2].x, (int)screenV[2].y,
+		color, kFillModeWireFrame
+	);
 }
 
 Vector3 MatrixMath::Perpendicular(const Vector3& vector) {
