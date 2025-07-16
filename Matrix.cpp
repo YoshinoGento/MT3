@@ -488,7 +488,7 @@ Vector3 MatrixMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 	};
 }
 
-bool IsCollisionP(const Segment& segment, const Plane& plane) {
+bool MatrixMath::IsCollisionP(const Segment& segment, const Plane& plane) {
 	// 線分の始点と終点を取得
 	Vector3 start = segment.origin;                  // 線分の始点
 	Vector3 end = Add(segment.origin, segment.diff);     // 線分の終点（始点 + 向きベクトル）
@@ -539,10 +539,9 @@ void MatrixMath::DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMa
 }
 
 void MatrixMath::DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
-
 	Vector3 screenV[3];
 	for (int i = 0; i < 3; ++i) {
-		screenV[i] = Transform(Transform(triangle.vertex[i], viewProjectionMatrix), viewportMatrix);
+		screenV[i] = MatrixMath::Transform(MatrixMath::Transform(triangle.vertex[i], viewProjectionMatrix), viewportMatrix);
 	}
 	Novice::DrawTriangle(
 		(int)screenV[0].x, (int)screenV[0].y,
@@ -552,7 +551,80 @@ void MatrixMath::DrawTriangle(const Triangle& triangle, const Matrix4x4& viewPro
 	);
 }
 
-Vector3 MatrixMath::Perpendicular(const Vector3& vector) {
+
+bool MatrixMath::IsCollisionT(const Triangle& triangle, const Segment& segment) {
+	// 三角形の法線を求める
+	Vector3 v01 = {
+		triangle.vertex[1].x - triangle.vertex[0].x,
+		triangle.vertex[1].y - triangle.vertex[0].y,
+		triangle.vertex[1].z - triangle.vertex[0].z
+	};
+	Vector3 v02 = {
+		triangle.vertex[2].x - triangle.vertex[0].x,
+		triangle.vertex[2].y - triangle.vertex[0].y,
+		triangle.vertex[2].z - triangle.vertex[0].z
+	};
+
+	Vector3 normal = Normalize(Cross(v01, v02));
+
+	// 三角形を含む平面
+	float d = triangle.vertex[0].x * normal.x + triangle.vertex[0].y * normal.y + triangle.vertex[0].z * normal.z;
+
+	// 始点と終点
+	Vector3 p0 = segment.origin;
+	Vector3 p1 = {
+		segment.origin.x + segment.diff.x,
+		segment.origin.y + segment.diff.y,
+		segment.origin.z + segment.diff.z
+	};
+
+	// 始点終点の平面からの距離
+	float dot0 = p0.x * normal.x + p0.y * normal.y + p0.z * normal.z - d;
+	float dot1 = p1.x * normal.x + p1.y * normal.y + p1.z * normal.z - d;
+
+	if (dot0 * dot1 > 0.0f) return false; // 平面と交差していない
+
+	// 衝突点を線形補間で求める
+	float t = dot0 / (dot0 - dot1);
+	Vector3 p = {
+		p0.x + (p1.x - p0.x) * t,
+		p0.y + (p1.y - p0.y) * t,
+		p0.z + (p1.z - p0.z) * t,
+	};
+
+	// バリツェントリック法で三角形内にあるかをチェック
+	Vector3 v0 = {
+		triangle.vertex[1].x - triangle.vertex[0].x,
+		triangle.vertex[1].y - triangle.vertex[0].y,
+		triangle.vertex[1].z - triangle.vertex[0].z,
+	};
+	Vector3 v1 = {
+		triangle.vertex[2].x - triangle.vertex[0].x,
+		triangle.vertex[2].y - triangle.vertex[0].y,
+		triangle.vertex[2].z - triangle.vertex[0].z,
+	};
+	Vector3 v2 = {
+		p.x - triangle.vertex[0].x,
+		p.y - triangle.vertex[0].y,
+		p.z - triangle.vertex[0].z,
+	};
+
+	float d00 = Dot(v0, v0);
+	float d01 = Dot(v0, v1);
+	float d11 = Dot(v1, v1);
+	float d20 = Dot(v2, v0);
+	float d21 = Dot(v2, v1);
+
+	float denom = d00 * d11 - d01 * d01;
+	if (denom == 0.0f) return false;
+
+	float u = (d11 * d20 - d01 * d21) / denom;
+	float v = (d00 * d21 - d01 * d20) / denom;
+
+	return (u >= 0.0f && v >= 0.0f && u + v <= 1.0f);
+}
+
+Vector3 MatrixMath::Perpendicular(const Vector3& vector){
 	// vectorと直交する適当なベクトルを返す
 	if (vector.x != 0.0f || vector.y != 0.0f) {
 		return { -vector.y, vector.x, 0.0f };

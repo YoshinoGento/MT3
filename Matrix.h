@@ -81,14 +81,17 @@ namespace MatrixMath {
 
    Vector3 ClosestPoint(const Vector3& point, const Segment &segment);
 
-   //当たり判定    
+   //平面の描画
    void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color);
 
+   //平面と線分の衝突判定
    bool IsCollisionP(const Segment& segment, const Plane& plane);
 
+   //三角形の描画
    void DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color);
 
-   bool IsCollisionT(const Triangle &triangle,const Segment &segment);
+   //三角形と線分の衝突判定
+   bool IsCollisionT(const Triangle& triangle, const Segment& segment);
 
    Vector3 Perpendicular(const Vector3& vector);
 
