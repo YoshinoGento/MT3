@@ -71,3 +71,8 @@ struct Plane {
 struct Triangle {
 	Vector3 vertex[3]; //!< 頂点の配列
 };
+
+struct AABB{ 
+    Vector3 min; //!< 最小点
+	Vector3 max; //!< 最大点
+};

@@ -4,6 +4,9 @@
 #include "Player.h"
 #include <cstdint>
 #include <imgui.h>
+#include <cmath>
+#include <algorithm>
+
 
 const char kWindowTitle[] = "LE2C_28_ヨシノゲント_タイトル";
 
@@ -58,6 +61,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Segment segment = { {0.0f, 1.0f, -1.0f}, {0.0f, -2.0f, 2.0f} };
 
 	Vector3 point{ -1.5f,0.6f,0.6f };
+
+	AABB aabb1{
+		.min{-0.5f,-0.5f,-0.5f},
+		.max{0.0f,0.0f,0.0f}
+	};
+
+	AABB aabb2{
+		.min{0.2f,0.2f,0.2f},
+		.max{1.0f,1.0f,1.0f},
+	};
 
 	Triangle triangle = {
 			{{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}}
@@ -139,37 +152,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Begin("Window");
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
-		ImGui::DragFloat("Plane.Distance", &plane.distance, 0.01f);
-		ImGui::DragFloat3("Segment.Origin", &segment.origin.x, 0.01f);
-		ImGui::DragFloat3("Segment.Diff", &segment.diff.x, 0.01f);
-		ImGui::DragFloat3("Triangle V0", &triangle.vertex[0].x, 0.01f);
-		ImGui::DragFloat3("Triangle V1", &triangle.vertex[1].x, 0.01f);
-		ImGui::DragFloat3("Triangle V2", &triangle.vertex[2].x, 0.01f);
+		ImGui::DragFloat3("aabb1.min", &aabb1.min.x, 0.01f);
+		ImGui::DragFloat3("aabb1.max", &aabb1.max.x, 0.01f);
+		ImGui::DragFloat3("aabb2.min", &aabb2.min.x, 0.01f);
+		ImGui::DragFloat3("aabb2.max", &aabb2.max.x, 0.01f);
+		
 		ImGui::End();
-
+		aabb1.min.x = (std::min)(aabb1.min.x, aabb1.max.x);
+		aabb1.max.x = (std::max)(aabb1.min.x, aabb1.max.x);
 
 		plane.normal = MatrixMath::Normalize(plane.normal); // 法線ベクトルを正規化
 
 		// 線と平面の衝突判定
-		uint32_t segColor = MatrixMath::IsCollisionP(segment, plane) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
-
-		MatrixMath::DrawPlane(plane, viewProjectionMatrix, viewportMatrix, WHITE);
+		//uint32_t segColor = MatrixMath::IsCollisionP(segment, plane) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
+		uint32_t aaddClor = MatrixMath::IsCollisionAABB(aabb1, aabb2) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
+		
 
 		//bool hit = MatrixMath::IsCollisionT(triangle, segment);
 		
-		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), segColor);
+		//Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), segColor);
 
 		//MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, color);
 
 		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
+		MatrixMath::DrawAABB(aabb1, viewProjectionMatrix, viewportMatrix, aaddClor);
+
+		MatrixMath::DrawAABB(aabb2, viewProjectionMatrix, viewportMatrix, aaddClor);
+
 		//MatrixMath::DrawTriangle(triangle, viewProjectionMatrix, viewportMatrix, 0x00FF00FFF); // 緑の三角形
 
-		/*ImGui::DragFloat3("Point", &point.x, 0.01f);*/
-		//ImGui::DragFloat3("segmentOrigin", &segment.origin.x, 0.01f); // ←中心座標
-		//ImGui::DragFloat("segmentDiff", &segment.diff.x, 0.01f);     // ←半径
-		//ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
+
 		///
 		/// ↑描画処理ここまで
 		///

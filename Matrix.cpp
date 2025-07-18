@@ -406,7 +406,7 @@ void MatrixMath::DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4
 			color // 定義した色を使用
 		);
 
-		
+
 	}
 }
 
@@ -448,6 +448,53 @@ Vector3 MatrixMath::Normalize(const Vector3& v) {
 	result.y = v.y / Length(v);
 	result.z = v.z / Length(v);
 	return result;
+}
+
+bool MatrixMath::IsCollisionAABB(const AABB& aabb1, const AABB& aabb2) {
+
+	if ((aabb1.min.x <= aabb2.max.x && aabb1.max.x >= aabb2.min.x) &&
+		(aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y) &&
+		(aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z)) {
+
+		return true;
+
+	}
+	return false;
+}
+
+void MatrixMath::DrawAABB(
+	const AABB& aabb, const Matrix4x4& viewProjectionMatrix,
+	const Matrix4x4& viewportMatrix, uint32_t color) {
+	// 1. AABBを構成する8頂点をmin/maxから作成
+	Vector3 vertices[8] = {
+		{aabb.min.x, aabb.min.y, aabb.min.z}, // 0: 左下奥
+		{aabb.max.x, aabb.min.y, aabb.min.z}, // 1: 右下奥
+		{aabb.max.x, aabb.max.y, aabb.min.z}, // 2: 右上奥
+		{aabb.min.x, aabb.max.y, aabb.min.z}, // 3: 左上奥
+		{aabb.min.x, aabb.min.y, aabb.max.z}, // 4: 左下手前
+		{aabb.max.x, aabb.min.y, aabb.max.z}, // 5: 右下手前
+		{aabb.max.x, aabb.max.y, aabb.max.z}, // 6: 右上手前
+		{aabb.min.x, aabb.max.y, aabb.max.z}  // 7: 左上手前
+	};
+
+	// 2. 頂点を結ぶ辺（線）のインデックス（12本）
+	int indices[12][2] = {
+		{0, 1}, {1, 2}, {2, 3}, {3, 0}, // 奥の面
+		{4, 5}, {5, 6}, {6, 7}, {7, 4}, // 手前の面
+		{0, 4}, {1, 5}, {2, 6}, {3, 7}  // 側面の辺
+	};
+
+	// 3. 各辺を変換して描画（viewProjection → viewport）
+	for (int i = 0; i < 12; ++i) {
+		Vector3 start = Transform(Transform(vertices[indices[i][0]], viewProjectionMatrix), viewportMatrix);
+		Vector3 end = Transform(Transform(vertices[indices[i][1]], viewProjectionMatrix), viewportMatrix);
+
+		Novice::DrawLine(
+			static_cast<int>(start.x), static_cast<int>(start.y),
+			static_cast<int>(end.x), static_cast<int>(end.y),
+			color
+		);
+	}
 }
 
 
@@ -511,7 +558,7 @@ void MatrixMath::DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMa
 	Vector3 center = MultiplyV(plane.distance, plane.normal);
 
 	// 平面に垂直な2つの単位ベクトルを作成（平面上の軸）
-    Vector3 u = MatrixMath::Normalize(MatrixMath::Perpendicular(plane.normal)); // 法線と垂直な任意のベクトル
+	Vector3 u = MatrixMath::Normalize(MatrixMath::Perpendicular(plane.normal)); // 法線と垂直な任意のベクトル
 	Vector3 v = MatrixMath::Normalize(Cross(plane.normal, u));                // uと法線に垂直なもう一つのベクトル
 
 	float size = 2.0f; // 平面を描画する正方形の一辺の半分の長さ
@@ -537,6 +584,8 @@ void MatrixMath::DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMa
 		);
 	}
 }
+
+
 
 void MatrixMath::DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
 	Vector3 screenV[3];
@@ -624,12 +673,12 @@ bool MatrixMath::IsCollisionT(const Triangle& triangle, const Segment& segment) 
 	return (u >= 0.0f && v >= 0.0f && u + v <= 1.0f);
 }
 
-Vector3 MatrixMath::Perpendicular(const Vector3& vector){
+Vector3 MatrixMath::Perpendicular(const Vector3& vector) {
 	// vectorと直交する適当なベクトルを返す
 	if (vector.x != 0.0f || vector.y != 0.0f) {
 		return { -vector.y, vector.x, 0.0f };
-	} 
-		return { 0.0f, -vector.z, vector.y };
+	}
+	return { 0.0f, -vector.z, vector.y };
 }
 
 
