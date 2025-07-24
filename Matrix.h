@@ -108,7 +108,7 @@ namespace MatrixMath {
 	void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color);
 
 	//AABBと球の衝突判定
-	void IsCollisionSphereAABB(const AABB &aabb,const Sphere & sphere);
+	bool IsCollisionSphereAABB(const AABB &aabb,const Sphere & sphere);
 
 
 

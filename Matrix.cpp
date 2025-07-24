@@ -497,6 +497,23 @@ void MatrixMath::DrawAABB(
 	}
 }
 
+bool MatrixMath::IsCollisionSphereAABB(const AABB& aabb, const Sphere& sphere) {
+
+	// 最近接点を求める
+	Vector3 closestPoint;
+	closestPoint.x = std::clamp(sphere.center.x, aabb.min.x, aabb.max.x);
+	closestPoint.y = std::clamp(sphere.center.y, aabb.min.y, aabb.max.y);
+	closestPoint.z = std::clamp(sphere.center.z, aabb.min.z, aabb.max.z);
+
+	// 球の中心との距離を求める
+	Vector3 diff = Subtract(closestPoint, sphere.center);
+	float distance = Length(diff);
+
+	// 距離が半径以下なら衝突
+	return distance <= sphere.radius;
+
+}
+
 
 
 
