@@ -53,7 +53,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraTranslate{ 0.0f,1.9f,-6.49f };
 	Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 
-	//Sphere spherePlayer = { {0.0f, 1.0f, 0.0f}, 1.5f }; // 中心が(0,1,0)、半径1.5の球
+	Sphere spherePlayer = { {0.0f, 1.0f, 0.0f}, 1.5f }; // 中心が(0,1,0)、半径1.5の球
 	//Sphere sphereEnemy  = { {0.5f, 1.0f, 0.0f}, 1.0f }; // 中心が(0,1,0)、半径1.5の球
 
 	Plane plane = { {0.0f, 1.0f, 0.0f}, 1.0f };
@@ -150,8 +150,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("aabb1.min", &aabb1.min.x, 0.01f);
 		ImGui::DragFloat3("aabb1.max", &aabb1.max.x, 0.01f);
-	/*	ImGui::DragFloat3("aabb2.min", &aabb2.min.x, 0.01f);
-		ImGui::DragFloat3("aabb2.max", &aabb2.max.x, 0.01f);*/
+		ImGui::DragFloat3("sphere.center", &spherePlayer.center, 0.01f);
+		ImGui::DragFloat3("sphere.radius", &spherePlayer.radius, 0.01f);
 		
 		ImGui::End();
 		aabb1.min.x = (std::min)(aabb1.min.x, aabb1.max.x);
@@ -161,7 +161,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 線と平面の衝突判定
 		//uint32_t segColor = MatrixMath::IsCollisionP(segment, plane) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
-		uint32_t aaddClor = MatrixMath::IsCollisionAABB(aabb1, aabb2) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
+		uint32_t aaddClor = MatrixMath::IsCollisionSphereAABB (aabb1, spherePlayer) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
 		
 
 		//bool hit = MatrixMath::IsCollisionT(triangle, segment);
@@ -174,7 +174,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		MatrixMath::DrawAABB(aabb1, viewProjectionMatrix, viewportMatrix, aaddClor);
 
-		MatrixMath::DrawAABB(aabb2, viewProjectionMatrix, viewportMatrix, aaddClor);
+		MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, 0xFFFFFFFF); // 青の球
 
 		//MatrixMath::DrawTriangle(triangle, viewProjectionMatrix, viewportMatrix, 0x00FF00FFF); // 緑の三角形
 
