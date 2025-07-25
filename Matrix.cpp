@@ -514,6 +514,43 @@ bool MatrixMath::IsCollisionSphereAABB(const AABB& aabb, const Sphere& sphere) {
 
 }
 
+bool MatrixMath::IsIntersectAABBAndSegment(const AABB& box, const segment& seg) {
+	Vector3 dir = {
+		seg.end.x - seg.start.x,
+		seg.end.y - seg.start.y,
+		seg.end.z - seg.start.z
+	};
+
+	float tMin = 0.0f;
+	float tMax = 1.0f;
+
+	for (int i = 0; i < 3; ++i) {
+		float start = (&seg.start.x)[i];
+		float d = (&dir.x)[i];
+		float minB = (&box.min.x)[i];
+		float maxB = (&box.max.x)[i];
+
+		if (std::abs(d) < 1e-6f) {
+			if (start < minB || start > maxB) return false;
+		} else {
+			float ood = 1.0f / d;
+			float t1 = (minB - start) * ood;
+			float t2 = (maxB - start) * ood;
+			if (t1 > t2) std::swap(t1, t2);
+			tMin = std::max<float>(tMin, t1);
+			tMax = std::min<float>(tMax, t2);
+			if (tMin > tMax) return false;
+		}
+	}
+	return true;
+}
+
+void MatrixMath::DrawSegment(const segment& seg, const Matrix4x4& viewProjection, const Matrix4x4& viewport, uint32_t color) {
+	Vector3 screenStart = Transform(Transform(seg.start, viewProjection), viewport);
+	Vector3 screenEnd = Transform(Transform(seg.end, viewProjection), viewport);
+	Novice::DrawLine((int)screenStart.x, (int)screenStart.y, (int)screenEnd.x, (int)screenEnd.y, color);
+}
+
 
 
 

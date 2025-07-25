@@ -23,10 +23,10 @@ float radius;   //!< 半径
 };  
 
 // 線分  
-//struct Segment {  
-//Vector3 start; //!< 始点  
-//Vector3 end;   //!< 終点 
-//};
+struct segment {  
+Vector3 start; //!< 始点  
+Vector3 end;   //!< 終点 
+};
 
 
 /// <summary>

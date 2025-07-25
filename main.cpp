@@ -58,14 +58,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Plane plane = { {0.0f, 1.0f, 0.0f}, 1.0f };
 
-	Segment segment = { {0.0f, 1.0f, -1.0f}, {0.0f, -2.0f, 2.0f} };
+	segment segment = { {0.0f, 1.0f, -1.0f}, {0.0f, -2.0f, 2.0f} };
 
 	Vector3 point{ -1.5f,0.6f,0.6f };
 
-	AABB aabb1{
+	/*AABB aabb1{
 		.min{-0.5f,-0.5f,-0.5f},
-		.max{0.0f,0.0f,0.0f}
-	};
+		.max{0.5f,0.5f,0.5f}
+	};*/
+
+	static AABB box = { {-0.5f, 0.0f, -0.5f}, {0.5f, 1.0f, 0.5f} };
 
 
 	Triangle triangle = {
@@ -90,6 +92,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
+
+
+
+		box.min.x = std::min<float>(box.min.x, box.max.x);
+		box.max.x = std::max<float>(box.min.x, box.max.x);
+		box.min.y = std::min<float>(box.min.y, box.max.y);
+		box.max.y = std::max<float>(box.min.y, box.max.y);
+		box.min.z = std::min<float>(box.min.z, box.max.z);
+		box.max.z = std::max<float>(box.min.z, box.max.z);
+
 
 
 
@@ -130,9 +142,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix = MatrixMath::MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
 
-		//線分																																									
-		Vector3 start = MatrixMath::Transform(MatrixMath::Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
-		Vector3 end = MatrixMath::Transform(MatrixMath::Transform(MatrixMath::Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
+		////線分																																									
+		//Vector3 start = MatrixMath::Transform(MatrixMath::Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
+		//Vector3 end = MatrixMath::Transform(MatrixMath::Transform(MatrixMath::Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
 
 
 		///																							
@@ -148,20 +160,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Begin("Window");
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("aabb1.min", &aabb1.min.x, 0.01f);
-		ImGui::DragFloat3("aabb1.max", &aabb1.max.x, 0.01f);
-		ImGui::DragFloat3("sphere.center", &spherePlayer.center.x, 0.01f);
-		ImGui::DragFloat3("sphere.radius", &spherePlayer.radius, 0.01f);
+		ImGui::DragFloat3("aabb1.min", &box.min.x, 0.01f);
+		ImGui::DragFloat3("aabb1.max", &box.max.x, 0.01f);
+	  ImGui::DragFloat3("Segment Start", &segment.start.x, 0.01f);
+        ImGui::DragFloat3("Segment End", &segment.end.x, 0.01f);
+
 		
 		ImGui::End();
-		aabb1.min.x = (std::min)(aabb1.min.x, aabb1.max.x);
-		aabb1.max.x = (std::max)(aabb1.min.x, aabb1.max.x);
+		bool isHit = MatrixMath::IsIntersectAABBAndSegment(box, segment);
 
 		plane.normal = MatrixMath::Normalize(plane.normal); // 法線ベクトルを正規化
 
 		// 線と平面の衝突判定
 		//uint32_t segColor = MatrixMath::IsCollisionP(segment, plane) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
-		uint32_t aaddClor = MatrixMath::IsCollisionSphereAABB (aabb1, spherePlayer) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
+		int32_t aabbColor = isHit ? 0xFF0000FF : 0xFFFFFFFF;
+		uint32_t segColor = isHit ? 0xFF0000FF : 0xFFFFFFFF;// 赤 or 白
 		
 
 		//bool hit = MatrixMath::IsCollisionT(triangle, segment);
@@ -172,9 +185,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
-		MatrixMath::DrawAABB(aabb1, viewProjectionMatrix, viewportMatrix, aaddClor);
+		MatrixMath::DrawAABB(box, viewProjectionMatrix, viewportMatrix, aabbColor);
 
-		MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, 0xFFFFFFFF); // 青の球
+		MatrixMath::DrawSegment(segment, viewProjectionMatrix, viewportMatrix, segColor);
+
+
+		//MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, segColor); // 青の球
 
 		//MatrixMath::DrawTriangle(triangle, viewProjectionMatrix, viewportMatrix, 0x00FF00FFF); // 緑の三角形
 

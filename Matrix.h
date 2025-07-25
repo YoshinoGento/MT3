@@ -110,6 +110,9 @@ namespace MatrixMath {
 	//AABBと球の衝突判定
 	bool IsCollisionSphereAABB(const AABB &aabb,const Sphere & sphere);
 
+	//AABBと線分の衝突判定
+	bool IsIntersectAABBAndSegment(const AABB& box, const segment& seg);
 
-
+	//線分の描画
+	void DrawSegment(const segment& seg, const Matrix4x4& viewProjection, const Matrix4x4& viewport, uint32_t color);
 };
