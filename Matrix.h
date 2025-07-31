@@ -115,4 +115,13 @@ namespace MatrixMath {
 
 	//線分の描画
 	void DrawSegment(const segment& seg, const Matrix4x4& viewProjection, const Matrix4x4& viewport, uint32_t color);
+
+	//線形補間関数（Leap)
+	Vector3 Lerp(const Vector3& a, const Vector3& b, float t);
+
+	//2次ベジェ曲線関数
+	Vector3 QuadraticBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, float t);
+
+	//ベジェ曲線の描画関数
+	void DrawBezierCurve(const Vector3 controlPoints[3], const Matrix4x4& viewProjection, const Matrix4x4& viewport, uint32_t color);
 };

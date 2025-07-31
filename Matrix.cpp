@@ -343,23 +343,17 @@ void MatrixMath::DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectio
 				sphere.center.y + sphere.radius * sinf(lat),
 				sphere.center.z + sphere.radius * cosf(lat) * sinf(nextLon)
 			};
-			Vector3 d = {
-				sphere.center.x + sphere.radius * cosf(nextLat) * cosf(nextLon),
-				sphere.center.y + sphere.radius * sinf(nextLat),
-				sphere.center.z + sphere.radius * cosf(nextLat) * sinf(nextLon)
-			};
+			
 
 			// a, b, c, dをScreen座標系まで変換  
-			a = Transform(a, MultiplyM(viewProjectionMatrix, viewportMatrix));
-			b = Transform(b, MultiplyM(viewProjectionMatrix, viewportMatrix));
-			c = Transform(c, MultiplyM(viewProjectionMatrix, viewportMatrix));
-			d = Transform(d, MultiplyM(viewProjectionMatrix, viewportMatrix));
+			Vector3 screenA = Transform(Transform(a, viewProjectionMatrix), viewportMatrix);
+			Vector3 screenB = Transform(Transform(b, viewProjectionMatrix), viewportMatrix);
+			Vector3 screenC = Transform(Transform(c, viewProjectionMatrix), viewportMatrix);
+			
 
 			// ab, ac, bd, cdで線を引く  
-			Novice::DrawLine(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(b.x), static_cast<int>(b.y), color);
-			Novice::DrawLine(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(c.x), static_cast<int>(c.y), color);
-			Novice::DrawLine(static_cast<int>(b.x), static_cast<int>(b.y), static_cast<int>(d.x), static_cast<int>(d.y), color);
-			Novice::DrawLine(static_cast<int>(c.x), static_cast<int>(c.y), static_cast<int>(d.x), static_cast<int>(d.y), color);
+			Novice::DrawLine(int(screenA.x), int(screenA.y), int(screenB.x), int(screenB.y), color);
+			Novice::DrawLine(int(screenA.x), int(screenA.y), int(screenC.x), int(screenC.y), color);
 		}
 	}
 }
@@ -549,6 +543,45 @@ void MatrixMath::DrawSegment(const segment& seg, const Matrix4x4& viewProjection
 	Vector3 screenStart = Transform(Transform(seg.start, viewProjection), viewport);
 	Vector3 screenEnd = Transform(Transform(seg.end, viewProjection), viewport);
 	Novice::DrawLine((int)screenStart.x, (int)screenStart.y, (int)screenEnd.x, (int)screenEnd.y, color);
+}
+
+
+
+
+Vector3 MatrixMath::Lerp(const Vector3& a, const Vector3& b, float t) {
+
+	return{
+	   a.x + (b.x - a.x) * t,
+	   a.y + (b.y - a.y) * t,
+	   a.z + (b.z - a.z) * t
+	};
+
+}
+
+Vector3 MatrixMath::QuadraticBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, float t) {
+
+	Vector3 a = Lerp(p0, p1, t);
+	Vector3 b = Lerp(p1, p2, t);
+	return Lerp(a, b, t);
+}
+
+void MatrixMath::DrawBezierCurve(const Vector3 controlPoints[3], const Matrix4x4& viewProjection, const Matrix4x4& viewport, uint32_t color) {
+
+	const int kSegments = 100; // 分割数
+	for (int i = 0; i < kSegments; ++i) {
+		float t0 = static_cast<float>(i) / kSegments;
+		float t1 = static_cast<float>(i + 1) / kSegments;
+
+		Vector3 p0 = QuadraticBezier(controlPoints[0], controlPoints[1], controlPoints[2], t0);
+		Vector3 p1 = QuadraticBezier(controlPoints[0], controlPoints[1], controlPoints[2], t1);
+		// ビュー変換とビューポート変換を適用
+		Vector3 screenP0 = Transform(Transform(p0, viewProjection), viewport);
+		Vector3 screenP1 = Transform(Transform(p1, viewProjection), viewport);
+		// 線を描画
+		Novice::DrawLine(int(screenP0.x), int(screenP0.y), int(screenP1.x), int(screenP1.y), color);
+
+	}
+
 }
 
 

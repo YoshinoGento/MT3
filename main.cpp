@@ -33,6 +33,7 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matirix, const char* labe
 
 
 
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -72,6 +73,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Triangle triangle = {
 			{{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}}
+	};
+
+	// 球
+	Sphere sphereA = { {0.0f, 1.0f, 0.0f}, 1.0f };
+
+	// グローバル変数
+	Vector3 controlPoints[3] = {
+		{-0.8f, 0.58f, 1.0f},
+		{1.76f, 1.0f, -0.3f},
+		{0.94f, -0.7f, 2.3f},
 	};
 
 	//unsigned int color = BLACK;
@@ -164,17 +175,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("aabb1.max", &box.max.x, 0.01f);
 	  ImGui::DragFloat3("Segment Start", &segment.start.x, 0.01f);
         ImGui::DragFloat3("Segment End", &segment.end.x, 0.01f);
+		ImGui::DragFloat3("ControlPoint 0", &controlPoints[0].x, 0.01f);
+		ImGui::DragFloat3("ControlPoint 1", &controlPoints[1].x, 0.01f);
+		ImGui::DragFloat3("ControlPoint 2", &controlPoints[2].x, 0.01f);
+
 
 		
 		ImGui::End();
-		bool isHit = MatrixMath::IsIntersectAABBAndSegment(box, segment);
+		//bool isHit = MatrixMath::IsIntersectAABBAndSegment(box, segment);
 
-		plane.normal = MatrixMath::Normalize(plane.normal); // 法線ベクトルを正規化
+		//plane.normal = MatrixMath::Normalize(plane.normal); // 法線ベクトルを正規化
 
 		// 線と平面の衝突判定
 		//uint32_t segColor = MatrixMath::IsCollisionP(segment, plane) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
-		int32_t aabbColor = isHit ? 0xFF0000FF : 0xFFFFFFFF;
-		uint32_t segColor = isHit ? 0xFF0000FF : 0xFFFFFFFF;// 赤 or 白
+		//int32_t aabbColor = isHit ? 0xFF0000FF : 0xFFFFFFFF;
+		//uint32_t segColor = isHit ? 0xFF0000FF : 0xFFFFFFFF;// 赤 or 白
 		
 
 		//bool hit = MatrixMath::IsCollisionT(triangle, segment);
@@ -185,10 +200,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
-		MatrixMath::DrawAABB(box, viewProjectionMatrix, viewportMatrix, aabbColor);
+		
+		// 描画処理内
+		for (int i = 0; i < 3; ++i) {
+			Sphere controlSphere = { controlPoints[i], 0.01f };
+			MatrixMath::DrawSphere(controlSphere, viewProjectionMatrix, viewportMatrix, 0x000000FF); // 黒
+		}
 
-		MatrixMath::DrawSegment(segment, viewProjectionMatrix, viewportMatrix, segColor);
-
+		MatrixMath::DrawBezierCurve(controlPoints, viewProjectionMatrix, viewportMatrix, 0xFF00FFFF); // 曲線（紫）
 
 		//MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, segColor); // 青の球
 
