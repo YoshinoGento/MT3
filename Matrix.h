@@ -2,6 +2,8 @@
 #include "Struct.h"  
 #include "assert.h"  
 #include <cstdint> 
+#include <array>
+
 
 struct Matrix4x4 {  
    float m[4][4];  
@@ -53,6 +55,16 @@ namespace MatrixMath {
 
 	//3次元アフィン変換行列  
 	Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
+
+	//6.回転行列（オイラー角）
+	Matrix4x4 MakeRotateMatrix(const Vector3& rotate);
+
+	// ビュー行列作成（LookAt方式）
+	Matrix4x4 MakeViewMatrix(const Vector3& eye, const Vector3& target, const Vector3& up);
+
+	// 透視射影行列を作成
+	Matrix4x4 MakePerspectiveMatrix(float fovY, float aspect, float nearZ, float farZ);
+
 	//_________________________________________________________________________________  
 
 	//クロス積  

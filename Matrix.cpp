@@ -3,6 +3,7 @@
 #include "math.h"
 #include <cmath>
 #include <numbers>
+#include <array>
 #include <algorithm> // clamp に必要
 
 float pi = std::numbers::pi_v<float>;     // float版のπ
@@ -170,6 +171,80 @@ Matrix4x4 MatrixMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rota
 
 	return result;
 }
+
+Matrix4x4 MatrixMath::MakeRotateMatrix(const Vector3& rotate) {
+	float cosX = cosf(rotate.x), sinX = sinf(rotate.x);
+	float cosY = cosf(rotate.y), sinY = sinf(rotate.y);
+	float cosZ = cosf(rotate.z), sinZ = sinf(rotate.z);
+
+	Matrix4x4 rotX = {
+		1, 0,     0,    0,
+		0, cosX,  sinX, 0,
+		0, -sinX, cosX, 0,
+		0, 0,     0,    1
+	};
+	Matrix4x4 rotY = {
+		cosY, 0, -sinY, 0,
+		0,    1, 0,     0,
+		sinY, 0, cosY,  0,
+		0,    0, 0,     1
+	};
+	Matrix4x4 rotZ = {
+		cosZ, sinZ, 0, 0,
+		-sinZ, cosZ, 0, 0,
+		0,     0,    1, 0,
+		0,     0,    0, 1
+	};
+
+	// rotZ * rotX * rotY
+	Matrix4x4 result = MatrixMath::MultiplyM(MatrixMath::MultiplyM(rotZ, rotX), rotY);
+	return result;
+}
+
+Matrix4x4 MatrixMath::MakeViewMatrix(const Vector3& eye, const Vector3& target, const Vector3& up) {
+	Vector3 zAxis = Normalize({ target.x - eye.x, target.y - eye.y, target.z - eye.z });
+	Vector3 xAxis = Normalize(Cross(up, zAxis));
+	Vector3 yAxis = Cross(zAxis, xAxis);
+
+	Matrix4x4 viewMatrix = {};
+	viewMatrix.m[0][0] = xAxis.x;
+	viewMatrix.m[1][0] = xAxis.y;
+	viewMatrix.m[2][0] = xAxis.z;
+	viewMatrix.m[3][0] = -(eye.x * xAxis.x + eye.y * xAxis.y + eye.z * xAxis.z);
+
+	viewMatrix.m[0][1] = yAxis.x;
+	viewMatrix.m[1][1] = yAxis.y;
+	viewMatrix.m[2][1] = yAxis.z;
+	viewMatrix.m[3][1] = -(eye.x * yAxis.x + eye.y * yAxis.y + eye.z * yAxis.z);
+
+	viewMatrix.m[0][2] = zAxis.x;
+	viewMatrix.m[1][2] = zAxis.y;
+	viewMatrix.m[2][2] = zAxis.z;
+	viewMatrix.m[3][2] = -(eye.x * zAxis.x + eye.y * zAxis.y + eye.z * zAxis.z);
+
+	viewMatrix.m[0][3] = 0;
+	viewMatrix.m[1][3] = 0;
+	viewMatrix.m[2][3] = 0;
+	viewMatrix.m[3][3] = 1;
+
+	return viewMatrix;
+}
+
+Matrix4x4 MatrixMath::MakePerspectiveMatrix(float fovY, float aspect, float nearZ, float farZ) {
+
+	float f = 1.0f / tanf(fovY / 2.0f);
+	Matrix4x4 m{};
+	m.m[0][0] = f / aspect;
+	m.m[1][1] = f;
+	m.m[2][2] = farZ / (farZ - nearZ);
+	m.m[3][2] = -nearZ * farZ / (farZ - nearZ);
+	m.m[2][3] = 1.0f;
+	m.m[3][3] = 0.0f;
+
+	return m;
+}
+
+
 
 
 
@@ -687,7 +762,7 @@ void MatrixMath::DrawTriangle(const Triangle& triangle, const Matrix4x4& viewPro
 	);
 }
 
-
+//  ---      ---- //
 bool MatrixMath::IsCollisionT(const Triangle& triangle, const Segment& segment) {
 	// 三角形の法線を求める
 	Vector3 v01 = {

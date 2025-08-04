@@ -43,10 +43,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
-	int kWindowWidth = 1280;
-	int kWindowHeight = 720;
+	//int kWindowWidth = 1280;
+	//int kWindowHeight = 720;
 
 
+	// 各関節のワールド座標を計算
+	Matrix4x4 localMatrices[3];
+	Matrix4x4 worldMatrices[3];
 
 
 	Vector3 cameraPosition = { 0.0f,0.0f,-1.0f };
@@ -63,6 +66,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Vector3 point{ -1.5f,0.6f,0.6f };
 
+
+	Vector3 translates[3] = {
+		{0.2f,1.0f,0.0f},
+		{0.4f,0.0f,0.0f},
+		{0.3f,0.0f,0.0f},
+	};
+
+
+	Vector3 rotates[3] = {
+		{0.0f,0.0f,-6.8f},
+		{0.0f,0.0f,-1.4f},
+		{0.0f,0.0f,0.0f},
+	};
+
+	Vector3 scales[3] = {
+		{1.0f,1.0f,1.0f},
+		{1.0f,1.0f,1.0f},
+		{1.0f,1.0f,1.0f},
+	};
+
+
 	/*AABB aabb1{
 		.min{-0.5f,-0.5f,-0.5f},
 		.max{0.5f,0.5f,0.5f}
@@ -74,6 +98,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Triangle triangle = {
 			{{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}}
 	};
+
+
+
+
 
 	// 球
 	Sphere sphereA = { {0.0f, 1.0f, 0.0f}, 1.0f };
@@ -105,58 +133,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 
-
-		box.min.x = std::min<float>(box.min.x, box.max.x);
-		box.max.x = std::max<float>(box.min.x, box.max.x);
-		box.min.y = std::min<float>(box.min.y, box.max.y);
-		box.max.y = std::max<float>(box.min.y, box.max.y);
-		box.min.z = std::min<float>(box.min.z, box.max.z);
-		box.max.z = std::max<float>(box.min.z, box.max.z);
-
-
-
-
-		//各種行列の計算
-
-
-		/*Matrix4x4 cameraMatrix = MatrixMath::MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
-
-		Matrix4x4 viewMatrix = MatrixMath::Inverse(cameraMatrix);
-
-		Matrix4x4 projectionMatrix = MatrixMath::MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
-
-		Matrix4x4 worldViewProjectionMatrix = MatrixMath::Multiply(cameraMatrix, MatrixMath::Multiply(viewMatrix, projectionMatrix));
-
-		Matrix4x4 viewportMatrix = MatrixMath::MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);*/
-
-
-		// ビュー行列（カメラ位置と向き）
-		Matrix4x4 cameraMatrix = MatrixMath::MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
-		Matrix4x4 viewMatrix = MatrixMath::Inverse(cameraMatrix);
-
-		// プロジェクション行列
-		Matrix4x4 projectionMatrix = MatrixMath::MakePerspectiveFovMatrix(
-			0.45f,
-			float(kWindowWidth) / float(kWindowHeight),
-			0.1f,
-			100.0f
-		);
-
-		// ワールド行列（グリッドや球の位置）
-		Matrix4x4 worldMatrix = MatrixMath::MakeIdentity();
-
-		// 各種行列の合成
-		Matrix4x4 viewProjectionMatrix = MatrixMath::MultiplyM(viewMatrix, projectionMatrix);
-		Matrix4x4 worldViewProjectionMatrix = MatrixMath::MultiplyM(worldMatrix, viewProjectionMatrix);
-
-		// ビューポート行列
-		Matrix4x4 viewportMatrix = MatrixMath::MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
-
-
-		////線分																																									
-		//Vector3 start = MatrixMath::Transform(MatrixMath::Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
-		//Vector3 end = MatrixMath::Transform(MatrixMath::Transform(MatrixMath::Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
-
+		for (int i = 0; i < 3; ++i) {
+			Matrix4x4 scaleMatrix = MatrixMath::MakeScaleMatrix(scales[i]);
+			Matrix4x4 rotateMatrix = MatrixMath::MakeRotateMatrix(rotates[i]);
+			Matrix4x4 translateMatrix = MatrixMath::MakeTranslateMatrix(translates[i]);
+			localMatrices[i] = MatrixMath::MultiplyM(MatrixMath::MultiplyM(scaleMatrix, rotateMatrix), translateMatrix);
+			if (i == 0) {
+				worldMatrices[i] = localMatrices[i];
+			} else {
+				worldMatrices[i] = MatrixMath::MultiplyM(worldMatrices[i - 1], localMatrices[i]);
+			}
+		}
 
 		///																							
 		/// ↑更新処理ここまで
@@ -171,47 +158,77 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Begin("Window");
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("aabb1.min", &box.min.x, 0.01f);
-		ImGui::DragFloat3("aabb1.max", &box.max.x, 0.01f);
-	  ImGui::DragFloat3("Segment Start", &segment.start.x, 0.01f);
-        ImGui::DragFloat3("Segment End", &segment.end.x, 0.01f);
-		ImGui::DragFloat3("ControlPoint 0", &controlPoints[0].x, 0.01f);
-		ImGui::DragFloat3("ControlPoint 1", &controlPoints[1].x, 0.01f);
-		ImGui::DragFloat3("ControlPoint 2", &controlPoints[2].x, 0.01f);
 
 
-		
-		ImGui::End();
-		//bool isHit = MatrixMath::IsIntersectAABBAndSegment(box, segment);
 
-		//plane.normal = MatrixMath::Normalize(plane.normal); // 法線ベクトルを正規化
-
-		// 線と平面の衝突判定
-		//uint32_t segColor = MatrixMath::IsCollisionP(segment, plane) ? 0xFF0000FF : 0xFFFFFFFF; // 赤 or 白
-		//int32_t aabbColor = isHit ? 0xFF0000FF : 0xFFFFFFFF;
-		//uint32_t segColor = isHit ? 0xFF0000FF : 0xFFFFFFFF;// 赤 or 白
-		
-
-		//bool hit = MatrixMath::IsCollisionT(triangle, segment);
-		
-		//Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), segColor);
-
-		//MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, color);
-
-		MatrixMath::DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-
-		
-		// 描画処理内
 		for (int i = 0; i < 3; ++i) {
-			Sphere controlSphere = { controlPoints[i], 0.01f };
-			MatrixMath::DrawSphere(controlSphere, viewProjectionMatrix, viewportMatrix, 0x000000FF); // 黒
+			ImGui::PushID(i);
+			ImGui::DragFloat3("Translate", &translates[i].x, 0.01f);
+			ImGui::DragFloat3("Rotate", &rotates[i].x, 0.01f);
+			ImGui::DragFloat3("Scale", &scales[i].x, 0.01f);
+			ImGui::PopID();
 		}
 
-		MatrixMath::DrawBezierCurve(controlPoints, viewProjectionMatrix, viewportMatrix, 0xFF00FFFF); // 曲線（紫）
 
-		//MatrixMath::DrawSphere(spherePlayer, worldViewProjectionMatrix, viewportMatrix, segColor); // 青の球
+		ImGui::End();
+		Matrix4x4 rotateMatrix = MatrixMath::MakeRotateMatrix(cameraRotate);
+		Vector3 forward = MatrixMath::Transform({ 0, 0, 1 }, rotateMatrix);
+		Vector3 target = {
+			cameraTranslate.x + forward.x,
+			cameraTranslate.y + forward.y,
+			cameraTranslate.z + forward.z
+		};
+		Vector3 up = MatrixMath::Transform({ 0, 1, 0 }, rotateMatrix);
 
-		//MatrixMath::DrawTriangle(triangle, viewProjectionMatrix, viewportMatrix, 0x00FF00FFF); // 緑の三角形
+		Matrix4x4 viewMatrix = MatrixMath::MakeViewMatrix(cameraTranslate, target, up);
+
+		// パース付き射影行列
+		float fovY = 0.5f;
+		float aspect = 1280.0f / 720.0f;
+		float nearZ = 0.1f;
+		float farZ = 100.0f;
+		Matrix4x4 projectionMatrix = MatrixMath::MakePerspectiveMatrix(fovY, aspect, nearZ, farZ);
+
+		// viewProjectionMatrix = view × projection
+		Matrix4x4 viewProjectionMatrix = {};
+		for (int i = 0; i < 4; ++i) {
+			for (int j = 0; j < 4; ++j) {
+				viewProjectionMatrix.m[i][j] = 0.0f;
+				for (int k = 0; k < 4; ++k) {
+					viewProjectionMatrix.m[i][j] += viewMatrix.m[i][k] * projectionMatrix.m[k][j];
+				}
+			}
+		}
+
+		// ビューポート行列（画面中心に変換）
+		Matrix4x4 viewportMatrix = {
+			640.0f, 0,       0, 0,
+			0,    -360.0f,   0, 0,
+			0,       0,      1, 0,
+			640.0f, 360.0f,  0, 1
+		};
+
+		// 関節の色
+		unsigned int colors[3] = { RED, GREEN, BLUE };
+
+		// 関節のスクリーン座標を計算
+		Vector3 jointPositions[3];
+		for (int i = 0; i < 3; ++i) {
+			Vector3 pos = MatrixMath::Transform({ 0.0f, 0.0f, 0.0f }, worldMatrices[i]);
+			Vector3 screenPos = MatrixMath::Transform(MatrixMath::Transform(pos, viewProjectionMatrix), viewportMatrix);
+			jointPositions[i] = screenPos;
+			// 球体を描画
+			Novice::DrawEllipse(int(screenPos.x), int(screenPos.y), 10, 10, 0.0f, colors[i], kFillModeSolid);
+		}
+
+		// 関節を線で接続
+		for (int i = 0; i < 2; ++i) {
+			Novice::DrawLine(int(jointPositions[i].x), int(jointPositions[i].y),
+				int(jointPositions[i + 1].x), int(jointPositions[i + 1].y),
+				0xFFFFFFFF);
+		}
+
+		MatrixMath::DrawGrid(viewProjectionMatrix, viewportMatrix);
 
 
 		///
