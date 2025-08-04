@@ -133,17 +133,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 
-		for (int i = 0; i < 3; ++i) {
-			Matrix4x4 scaleMatrix = MatrixMath::MakeScaleMatrix(scales[i]);
-			Matrix4x4 rotateMatrix = MatrixMath::MakeRotateMatrix(rotates[i]);
-			Matrix4x4 translateMatrix = MatrixMath::MakeTranslateMatrix(translates[i]);
-			localMatrices[i] = MatrixMath::MultiplyM(MatrixMath::MultiplyM(scaleMatrix, rotateMatrix), translateMatrix);
-			if (i == 0) {
-				worldMatrices[i] = localMatrices[i];
-			} else {
-				worldMatrices[i] = MatrixMath::MultiplyM(worldMatrices[i - 1], localMatrices[i]);
-			}
-		}
+
+		ImGui::NewFrame();
+
+		Vector3 a{ 0.2f, 1.0f, 0.0f };
+		Vector3 b{ 2.4f, 3.1f, 1.2f };
+		Vector3 c = a + b;
+		Vector3 d = a - b;
+		Vector3 e = a * 2.4f;
+
+		Vector3 rotate{ -0.4f, -1.43f, 0.8f }; // 正確な回転角（ラジアン）
+		Matrix4x4 rotX = MatrixMath::MakeRotateXMatrix(rotate.x);
+		Matrix4x4 rotY = MatrixMath::MakeRotateYMatrix(rotate.y);
+		Matrix4x4 rotZ = MatrixMath::MakeRotateZMatrix(rotate.z);
+		Matrix4x4 rot = rotX * rotY * rotZ;
 
 		///																							
 		/// ↑更新処理ここまで
@@ -155,80 +158,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
+		ImGui::SetNextWindowSize(ImVec2(600, 400), ImGuiCond_Always);
 		ImGui::Begin("Window");
-		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
-		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-
-
-
-		for (int i = 0; i < 3; ++i) {
-			ImGui::PushID(i);
-			ImGui::DragFloat3("Translate", &translates[i].x, 0.01f);
-			ImGui::DragFloat3("Rotate", &rotates[i].x, 0.01f);
-			ImGui::DragFloat3("Scale", &scales[i].x, 0.01f);
-			ImGui::PopID();
-		}
-
-
+		ImGui::Text("c: %.6f, %.6f, %.6f", c.x, c.y, c.z);
+		ImGui::Text("d: %.6f, %.6f, %.6f", d.x, d.y, d.z);
+		ImGui::Text("e: %.6f, %.6f, %.6f", e.x, e.y, e.z);
+		MatrixMath::ShowMatrix("rotateMatrix:", rot);
 		ImGui::End();
-		Matrix4x4 rotateMatrix = MatrixMath::MakeRotateMatrix(cameraRotate);
-		Vector3 forward = MatrixMath::Transform({ 0, 0, 1 }, rotateMatrix);
-		Vector3 target = {
-			cameraTranslate.x + forward.x,
-			cameraTranslate.y + forward.y,
-			cameraTranslate.z + forward.z
-		};
-		Vector3 up = MatrixMath::Transform({ 0, 1, 0 }, rotateMatrix);
 
-		Matrix4x4 viewMatrix = MatrixMath::MakeViewMatrix(cameraTranslate, target, up);
-
-		// パース付き射影行列
-		float fovY = 0.5f;
-		float aspect = 1280.0f / 720.0f;
-		float nearZ = 0.1f;
-		float farZ = 100.0f;
-		Matrix4x4 projectionMatrix = MatrixMath::MakePerspectiveMatrix(fovY, aspect, nearZ, farZ);
-
-		// viewProjectionMatrix = view × projection
-		Matrix4x4 viewProjectionMatrix = {};
-		for (int i = 0; i < 4; ++i) {
-			for (int j = 0; j < 4; ++j) {
-				viewProjectionMatrix.m[i][j] = 0.0f;
-				for (int k = 0; k < 4; ++k) {
-					viewProjectionMatrix.m[i][j] += viewMatrix.m[i][k] * projectionMatrix.m[k][j];
-				}
-			}
-		}
-
-		// ビューポート行列（画面中心に変換）
-		Matrix4x4 viewportMatrix = {
-			640.0f, 0,       0, 0,
-			0,    -360.0f,   0, 0,
-			0,       0,      1, 0,
-			640.0f, 360.0f,  0, 1
-		};
-
-		// 関節の色
-		unsigned int colors[3] = { RED, GREEN, BLUE };
-
-		// 関節のスクリーン座標を計算
-		Vector3 jointPositions[3];
-		for (int i = 0; i < 3; ++i) {
-			Vector3 pos = MatrixMath::Transform({ 0.0f, 0.0f, 0.0f }, worldMatrices[i]);
-			Vector3 screenPos = MatrixMath::Transform(MatrixMath::Transform(pos, viewProjectionMatrix), viewportMatrix);
-			jointPositions[i] = screenPos;
-			// 球体を描画
-			Novice::DrawEllipse(int(screenPos.x), int(screenPos.y), 10, 10, 0.0f, colors[i], kFillModeSolid);
-		}
-
-		// 関節を線で接続
-		for (int i = 0; i < 2; ++i) {
-			Novice::DrawLine(int(jointPositions[i].x), int(jointPositions[i].y),
-				int(jointPositions[i + 1].x), int(jointPositions[i + 1].y),
-				0xFFFFFFFF);
-		}
-
-		MatrixMath::DrawGrid(viewProjectionMatrix, viewportMatrix);
+		
 
 
 		///

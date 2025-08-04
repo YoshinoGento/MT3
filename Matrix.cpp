@@ -4,6 +4,8 @@
 #include <cmath>
 #include <numbers>
 #include <array>
+#include "Struct.h"
+#include "imgui.h" // ImGuiを使うために必要
 #include <algorithm> // clamp に必要
 
 float pi = std::numbers::pi_v<float>;     // float版のπ
@@ -96,17 +98,17 @@ Matrix4x4 MatrixMath::MakeViewportMatrix(float left, float top, float width, flo
 
 
 //拡大縮小行列
-Matrix4x4 MatrixMath::MakeScaleMatrix(const Vector3& scale) {
-
-	Matrix4x4 result = { {
-	   {scale.x, 0,  0,  0},  // 横の大きさ（x方向）
-	   {0,  scale.y, 0,  0},  // 縦の大きさ（y方向）
-	   {0,  0,  scale.z, 0},  // 奥行きの大きさ（z方向）
-	   {0,  0,  0,  1}        // おまじない（そのままでOK）
-	} };
-
-	return result;
-}
+//Matrix4x4 MatrixMath::MakeScaleMatrix(const Vector3& scale) {
+//
+//	Matrix4x4 result = { {
+//	   {scale.x, 0,  0,  0},  // 横の大きさ（x方向）
+//	   {0,  scale.y, 0,  0},  // 縦の大きさ（y方向）
+//	   {0,  0,  scale.z, 0},  // 奥行きの大きさ（z方向）
+//	   {0,  0,  0,  1}        // おまじない（そのままでOK）
+//	} };
+//
+//	return result;
+//}
 
 
 //X軸回転行列
@@ -148,58 +150,69 @@ Matrix4x4 MatrixMath::MakeRotateZMatrix(float radian) {
 }
 
 
+void MatrixMath::ShowMatrix(const char* label, const Matrix4x4& mat) {
+
+	ImGui::Text("%s", label);
+	for (int i = 0; i < 4; i++) {
+		ImGui::Text("| %.6f %.6f %.6f %.6f |",
+			mat.m[i][0], mat.m[i][1], mat.m[i][2], mat.m[i][3]);
+	}
+
+}
+
+
 //アフィン行列
-Matrix4x4 MatrixMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
-	Matrix4x4 result;
-
-
-
-	//回転行列を生成する
-	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
-	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
-	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
-
-	Matrix4x4 rotateMatrix = MultiplyM(rotateXMatrix, MultiplyM(rotateYMatrix, rotateZMatrix));
-
-
-	result = {
-		scale.x * rotateMatrix.m[0][0],scale.x * rotateMatrix.m[0][1],scale.x * rotateMatrix.m[0][2],0.0f,
-		scale.y * rotateMatrix.m[1][0],scale.y * rotateMatrix.m[1][1],scale.y * rotateMatrix.m[1][2],0.0f,
-		scale.z * rotateMatrix.m[2][0],scale.z * rotateMatrix.m[2][1],scale.z * rotateMatrix.m[2][2],0.0f,
-		translate.x,translate.y,translate.z,1.0f
-	};
-
-	return result;
-}
-
-Matrix4x4 MatrixMath::MakeRotateMatrix(const Vector3& rotate) {
-	float cosX = cosf(rotate.x), sinX = sinf(rotate.x);
-	float cosY = cosf(rotate.y), sinY = sinf(rotate.y);
-	float cosZ = cosf(rotate.z), sinZ = sinf(rotate.z);
-
-	Matrix4x4 rotX = {
-		1, 0,     0,    0,
-		0, cosX,  sinX, 0,
-		0, -sinX, cosX, 0,
-		0, 0,     0,    1
-	};
-	Matrix4x4 rotY = {
-		cosY, 0, -sinY, 0,
-		0,    1, 0,     0,
-		sinY, 0, cosY,  0,
-		0,    0, 0,     1
-	};
-	Matrix4x4 rotZ = {
-		cosZ, sinZ, 0, 0,
-		-sinZ, cosZ, 0, 0,
-		0,     0,    1, 0,
-		0,     0,    0, 1
-	};
-
-	// rotZ * rotX * rotY
-	Matrix4x4 result = MatrixMath::MultiplyM(MatrixMath::MultiplyM(rotZ, rotX), rotY);
-	return result;
-}
+//Matrix4x4 MatrixMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
+//	Matrix4x4 result;
+//
+//
+//
+//	//回転行列を生成する
+//	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+//	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
+//	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+//
+//	Matrix4x4 rotateMatrix = MultiplyM(rotateXMatrix, MultiplyM(rotateYMatrix, rotateZMatrix));
+//
+//
+//	result = {
+//		scale.x * rotateMatrix.m[0][0],scale.x * rotateMatrix.m[0][1],scale.x * rotateMatrix.m[0][2],0.0f,
+//		scale.y * rotateMatrix.m[1][0],scale.y * rotateMatrix.m[1][1],scale.y * rotateMatrix.m[1][2],0.0f,
+//		scale.z * rotateMatrix.m[2][0],scale.z * rotateMatrix.m[2][1],scale.z * rotateMatrix.m[2][2],0.0f,
+//		translate.x,translate.y,translate.z,1.0f
+//	};
+//
+//	return result;
+//}
+//
+//Matrix4x4 MatrixMath::MakeRotateMatrix(const Vector3& rotate) {
+//	float cosX = cosf(rotate.x), sinX = sinf(rotate.x);
+//	float cosY = cosf(rotate.y), sinY = sinf(rotate.y);
+//	float cosZ = cosf(rotate.z), sinZ = sinf(rotate.z);
+//
+//	Matrix4x4 rotX = {
+//		1, 0,     0,    0,
+//		0, cosX,  sinX, 0,
+//		0, -sinX, cosX, 0,
+//		0, 0,     0,    1
+//	};
+//	Matrix4x4 rotY = {
+//		cosY, 0, -sinY, 0,
+//		0,    1, 0,     0,
+//		sinY, 0, cosY,  0,
+//		0,    0, 0,     1
+//	};
+//	Matrix4x4 rotZ = {
+//		cosZ, sinZ, 0, 0,
+//		-sinZ, cosZ, 0, 0,
+//		0,     0,    1, 0,
+//		0,     0,    0, 1
+//	};
+//
+//	// rotZ * rotX * rotY
+//	Matrix4x4 result = MatrixMath::MultiplyM(MatrixMath::MultiplyM(rotZ, rotX), rotY);
+//	return result;
+//}
 
 Matrix4x4 MatrixMath::MakeViewMatrix(const Vector3& eye, const Vector3& target, const Vector3& up) {
 	Vector3 zAxis = Normalize({ target.x - eye.x, target.y - eye.y, target.z - eye.z });
@@ -249,17 +262,17 @@ Matrix4x4 MatrixMath::MakePerspectiveMatrix(float fovY, float aspect, float near
 
 
 //平行移動行列
-Matrix4x4 MatrixMath::MakeTranslateMatrix(const Vector3& translate) {
-
-	Matrix4x4 result = { {
-		{1, 0, 0, 0},  // x方向にtranslateだけ動かす
-		{0, 1, 0, 0},  // y方向にtranslateだけ動かす
-		{0, 0, 1, 0},  // z方向にtranslateだけ動かす
-		{translate.x, translate.y, translate.z, 1}    // この行は変えない（特別な意味）
-	} };
-
-	return result;
-}
+//Matrix4x4 MatrixMath::MakeTranslateMatrix(const Vector3& translate) {
+//
+//	Matrix4x4 result = { {
+//		{1, 0, 0, 0},  // x方向にtranslateだけ動かす
+//		{0, 1, 0, 0},  // y方向にtranslateだけ動かす
+//		{0, 0, 1, 0},  // z方向にtranslateだけ動かす
+//		{translate.x, translate.y, translate.z, 1}    // この行は変えない（特別な意味）
+//	} };
+//
+//	return result;
+//}
 
 
 //積

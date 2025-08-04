@@ -4,10 +4,30 @@
 #include <cstdint> 
 #include <array>
 
+// -- 4x4行列 -- //
+struct Matrix4x4 {
+	float m[4][4];
+	Matrix4x4() {
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+				m[i][j] = (i == j) ? 1.0f : 0.0f;
+	}
+	Matrix4x4 operator*(const Matrix4x4& rhs) const {
+		Matrix4x4 R;
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				R.m[i][j] = 0;
+				for (int k = 0; k < 4; k++) {
+					R.m[i][j] += m[i][k] * rhs.m[k][j];
+				}
+			}
+		}
+		return R;
+	}
+};
 
-struct Matrix4x4 {  
-   float m[4][4];  
-};  
+
+
 
 namespace MatrixMath {
 
@@ -136,4 +156,18 @@ namespace MatrixMath {
 
 	//ベジェ曲線の描画関数
 	void DrawBezierCurve(const Vector3 controlPoints[3], const Matrix4x4& viewProjection, const Matrix4x4& viewport, uint32_t color);
+
+
+	//    --- 3次ベジェ曲線関数 ---   //
+	Matrix4x4 MakeRotateXMatrix(float rad);
+
+	Matrix4x4 MakeRotateYMatrix(float rad);
+
+	Matrix4x4 MakeRotateZMatrix(float rad);
+
+
+
+	// 4x4行列の表示
+	void ShowMatrix(const char* label, const Matrix4x4& mat);
+
 };

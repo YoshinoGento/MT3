@@ -6,15 +6,29 @@ float y;
 float z;  
 float w;  
 };  
-struct Vector3 {  
-float x;  
-float y;  
-float z;  
-};  
+
+
+// -- Vector3の定義を追加 (演算子オーバーロード）-- //
+struct Vector3 {
+    float x, y, z;
+    Vector3(float _x = 0, float _y = 0, float _z = 0) : x(_x), y(_y), z(_z) {}
+    Vector3 operator+(const Vector3& rhs) const { return Vector3(x + rhs.x, y + rhs.y, z + rhs.z); }
+    Vector3 operator-(const Vector3& rhs) const { return Vector3(x - rhs.x, y - rhs.y, z - rhs.z); }
+    Vector3 operator*(float s) const { return Vector3(x * s, y * s, z * s); }
+};
+
+//struct Vector3 {  
+//float x;  
+//float y;  
+//float z;  
+//};  
+
 struct Vector2 {  
 float x;  
 float y;  
 };  
+
+
 
 // 球  
 struct Sphere {  
